@@ -14,214 +14,25 @@ import {
   Filter,
   Sparkles,
   BookmarkCheck,
-  Menu
+  Menu,
 } from "lucide-react";
 
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import AuthGuard from "../components/AuthGuard";
 
-type Difficulty = "Beginner" | "Intermediate" | "Advanced";
-
-type Question = {
-  id: string;
-  technology: string;
-  topic: string;
-  difficulty: Difficulty;
-  question: string;
-  answer: string;
-  code?: string;
-};
-
-const questions: Question[] = [
-  {
-    id: "js-1",
-    technology: "JavaScript",
-    topic: "Fundamentals",
-    difficulty: "Beginner",
-    question: "What is the difference between var, let, and const?",
-    answer:
-      "var is function-scoped and can be redeclared. let is block-scoped and can be reassigned, but cannot be redeclared in the same scope. const is block-scoped and cannot be reassigned after initialization. Objects and arrays declared with const can still have their contents modified.",
-    code: `let count = 1;
-count = 2;
-
-const user = { name: "Sam" };
-user.name = "Alex"; // Allowed`,
-  },
-  {
-    id: "js-2",
-    technology: "JavaScript",
-    topic: "Asynchronous JavaScript",
-    difficulty: "Intermediate",
-    question: "What is the event loop in JavaScript?",
-    answer:
-      "JavaScript executes synchronous code using the call stack. Asynchronous operations are handled by the runtime, and their callbacks are queued for later execution. The event loop schedules callbacks when the call stack is clear. Promise callbacks generally run before timer callbacks because promise handlers use the microtask queue.",
-  },
-  {
-    id: "js-3",
-    technology: "JavaScript",
-    topic: "Fundamentals",
-    difficulty: "Intermediate",
-    question: "What is the difference between == and ===?",
-    answer:
-      "The == operator compares values after performing type conversion when necessary. The === operator compares values without converting their types. Using === is generally recommended when you want predictable comparisons.",
-    code: `console.log(5 == "5");  // true
-console.log(5 === "5"); // false`,
-  },
-  {
-    id: "react-1",
-    technology: "React.js",
-    topic: "Hooks",
-    difficulty: "Beginner",
-    question: "What is the useState hook?",
-    answer:
-      "useState allows a functional component to store and update state. It returns the current state value and a setter function. Calling the setter schedules a re-render with the updated state.",
-    code: `const [count, setCount] = useState(0);
-
-<button onClick={() => setCount(count + 1)}>
-  Count: {count}
-</button>`,
-  },
-  {
-    id: "react-2",
-    technology: "React.js",
-    topic: "Hooks",
-    difficulty: "Intermediate",
-    question: "What is the useEffect hook?",
-    answer:
-      "useEffect is used to synchronize a component with external systems, such as subscriptions, timers, or browser APIs. Its dependency array controls when the effect is re-run. Return a cleanup function when the effect needs to remove a subscription or cancel ongoing work.",
-    code: `useEffect(() => {
-  document.title = "SkillPrep AI";
-
-  return () => {
-    // Cleanup when necessary
-  };
-}, []);`,
-  },
-  {
-    id: "react-3",
-    technology: "React.js",
-    topic: "Performance",
-    difficulty: "Advanced",
-    question: "How do you optimize a React application?",
-    answer:
-      "First, profile the application to identify the actual bottleneck. Common techniques include keeping state close to where it is used, using stable keys, lazy-loading components, avoiding unnecessary effects, memoizing expensive calculations with useMemo, and using React.memo when it provides a measurable benefit. Virtualization can help with very long lists.",
-  },
-  {
-    id: "next-1",
-    technology: "Next.js",
-    topic: "Rendering",
-    difficulty: "Intermediate",
-    question: "What is the difference between SSR, SSG, and CSR?",
-    answer:
-      "SSR renders a page on the server for a request. SSG generates pages ahead of time during the build, with revalidation options available. CSR renders much of the interface in the browser using JavaScript. Choose the approach based on data freshness, performance, and SEO requirements.",
-  },
-  {
-    id: "node-1",
-    technology: "Node.js",
-    topic: "Event Loop",
-    difficulty: "Intermediate",
-    question: "Why is Node.js suitable for I/O-heavy applications?",
-    answer:
-      "Node.js uses an event-driven model and non-blocking I/O. This allows it to handle many concurrent I/O operations without creating a separate thread for every request. CPU-heavy synchronous work can block the event loop, so it may need worker threads, a job queue, or a separate service.",
-  },
-  {
-    id: "node-2",
-    technology: "Node.js",
-    topic: "Scaling",
-    difficulty: "Advanced",
-    question: "How would you scale a Node.js API?",
-    answer:
-      "Measure performance first. Then consider multiple application processes or containers behind a load balancer, stateless application instances, Redis for shared caching when appropriate, database indexes, connection pooling, queues for background jobs, and appropriate timeouts, rate limits, logging, and metrics.",
-  },
-  {
-    id: "express-1",
-    technology: "Express.js",
-    topic: "Middleware",
-    difficulty: "Beginner",
-    question: "What is middleware in Express.js?",
-    answer:
-      "Middleware is a function that runs during the request-response lifecycle. It can inspect or modify the request, end the response, or call next() to pass control to the next middleware. Error-handling middleware takes four parameters: err, req, res, and next.",
-    code: `app.use((req, res, next) => {
-  console.log(req.method, req.url);
-  next();
-});`,
-  },
-  {
-    id: "express-2",
-    technology: "Express.js",
-    topic: "Authentication",
-    difficulty: "Intermediate",
-    question: "How does JWT authentication work?",
-    answer:
-      "After validating user credentials, the server issues a signed token. The client sends the token with subsequent requests, commonly using the Authorization Bearer header. The server verifies the signature and relevant claims before authorizing access. Tokens should have suitable expiration times and be handled securely.",
-    code: `Authorization: Bearer <token>`,
-  },
-  {
-    id: "mongo-1",
-    technology: "MongoDB",
-    topic: "Aggregation",
-    difficulty: "Intermediate",
-    question: "What is the MongoDB aggregation pipeline?",
-    answer:
-      "Aggregation processes documents through an ordered sequence of stages. Common stages include $match for filtering, $project for selecting fields, $group for summaries, $sort for ordering, and $lookup for combining data from another collection. Put selective filtering stages early when practical.",
-    code: `db.orders.aggregate([
-  { $match: { status: "paid" } },
-  {
-    $group: {
-      _id: "$customerId",
-      total: { $sum: "$amount" }
-    }
-  }
-]);`,
-  },
-  {
-    id: "mongo-2",
-    technology: "MongoDB",
-    topic: "Indexes",
-    difficulty: "Advanced",
-    question: "What is a MongoDB index?",
-    answer:
-      "An index helps MongoDB locate matching documents without scanning the entire collection for every query. Indexes can improve reads and sorting, but they consume storage and add work to inserts, updates, and deletes. Design indexes around real query patterns and validate performance with explain().",
-  },
-  {
-    id: "aws-1",
-    technology: "AWS",
-    topic: "Serverless",
-    difficulty: "Beginner",
-    question: "What is AWS Lambda?",
-    answer:
-      "AWS Lambda runs code in response to events without requiring you to manage the underlying servers. You configure the runtime, permissions, triggers, and resource limits. Consider execution duration, concurrency, retries, idempotency, and monitoring when designing a Lambda-based system.",
-  },
-  {
-    id: "aws-2",
-    technology: "AWS",
-    topic: "Messaging",
-    difficulty: "Advanced",
-    question: "When would you use SQS with Lambda?",
-    answer:
-      "Amazon SQS buffers work between producers and consumers and decouples services. Lambda can poll the queue and process messages in batches. Handlers should be idempotent because messages can be delivered more than once. Configure retries, visibility timeout, and a dead-letter queue appropriately.",
-  },
-];
-
-const technologies = [
-  { name: "All technologies", icon: "✦", subtitle: "Browse everything" },
-  { name: "JavaScript", icon: "JS", subtitle: "Core language" },
-  { name: "React.js", icon: "⚛", subtitle: "UI development" },
-  { name: "Next.js", icon: "N", subtitle: "Full-stack React" },
-  { name: "Node.js", icon: "⬡", subtitle: "Runtime and APIs" },
-  { name: "Express.js", icon: "EX", subtitle: "Backend framework" },
-  { name: "MongoDB", icon: "◉", subtitle: "Database" },
-  { name: "AWS", icon: "☁", subtitle: "Cloud services" },
-];
+import {
+  getInterviewQuestions,
+  type InterviewQuestion,
+  type Difficulty,
+} from "@/services/interviewApi";
 
 const difficultyStyles: Record<Difficulty, string> = {
-  Beginner:
-    "border-emerald-500/20 bg-emerald-500/10 text-emerald-300",
-  Intermediate:
-    "border-amber-500/20 bg-amber-500/10 text-amber-300",
-  Advanced:
-    "border-rose-500/20 bg-rose-500/10 text-rose-300",
+  Easy: "border-emerald-500/20 bg-emerald-500/10 text-emerald-300",
+
+  Medium: "border-amber-500/20 bg-amber-500/10 text-amber-300",
+
+  Hard: "border-rose-500/20 bg-rose-500/10 text-rose-300",
 };
 
 export default function InterviewPreparationPage() {
@@ -229,12 +40,63 @@ export default function InterviewPreparationPage() {
   const [difficulty, setDifficulty] = useState("All levels");
   const [topic, setTopic] = useState("All topics");
   const [search, setSearch] = useState("");
-  const [expandedId, setExpandedId] = useState<string | null>("node-1");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [completed, setCompleted] = useState<string[]>([]);
   const [saved, setSaved] = useState<string[]>([]);
   const [showSavedOnly, setShowSavedOnly] = useState(false);
   const [storageLoaded, setStorageLoaded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const loadQuestions = async () => {
+      try {
+        setIsLoading(true);
+        setError("");
+
+        const response = await getInterviewQuestions();
+
+        if (response.success) {
+          setQuestions(response.questions);
+        }
+      } catch (error) {
+        console.error("Load interview questions error:", error);
+
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Failed to load interview questions"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadQuestions();
+  }, []);
+
+  const technologies = useMemo(() => {
+    const categories = Array.from(
+      new Set(questions.map((question) => question.category))
+    ).sort();
+
+    return [
+      {
+        name: "All technologies",
+        icon: "✦",
+        subtitle: "Browse everything",
+      },
+
+      ...categories.map((category) => ({
+        name: category,
+        icon: category.substring(0, 2).toUpperCase(),
+        subtitle: "Interview questions",
+      })),
+    ];
+  }, [questions]);
 
   // Load progress from localStorage once on the client.
   useEffect(() => {
@@ -246,9 +108,7 @@ export default function InterviewPreparationPage() {
       );
 
       setSaved(
-        JSON.parse(
-          localStorage.getItem("skillprep-interview-saved") || "[]"
-        )
+        JSON.parse(localStorage.getItem("skillprep-interview-saved") || "[]")
       );
     } catch {
       setCompleted([]);
@@ -271,18 +131,14 @@ export default function InterviewPreparationPage() {
   // Persist bookmarked questions.
   useEffect(() => {
     if (storageLoaded) {
-      localStorage.setItem(
-        "skillprep-interview-saved",
-        JSON.stringify(saved)
-      );
+      localStorage.setItem("skillprep-interview-saved", JSON.stringify(saved));
     }
   }, [saved, storageLoaded]);
 
   const topics = useMemo(() => {
     const relevantQuestions = questions.filter(
       (question) =>
-        technology === "All technologies" ||
-        question.technology === technology
+        technology === "All technologies" || question.category === technology
     );
 
     return [
@@ -291,31 +147,27 @@ export default function InterviewPreparationPage() {
         new Set(relevantQuestions.map((question) => question.topic))
       ).sort(),
     ];
-  }, [technology]);
+  }, [technology, questions]);
 
   const filteredQuestions = useMemo(() => {
     const term = search.trim().toLowerCase();
 
     return questions.filter((question) => {
       const matchesTechnology =
-        technology === "All technologies" ||
-        question.technology === technology;
+        technology === "All technologies" || question.category === technology;
 
       const matchesDifficulty =
-        difficulty === "All levels" ||
-        question.difficulty === difficulty;
+        difficulty === "All levels" || question.difficulty === difficulty;
 
-      const matchesTopic =
-        topic === "All topics" || question.topic === topic;
+      const matchesTopic = topic === "All topics" || question.topic === topic;
 
       const matchesSearch =
         !term ||
-        `${question.question} ${question.answer} ${question.technology} ${question.topic}`
+        `${question.question} ${question.answer} ${question.category} ${question.topic}`
           .toLowerCase()
           .includes(term);
 
-      const matchesSaved =
-        !showSavedOnly || saved.includes(question.id);
+      const matchesSaved = !showSavedOnly || saved.includes(question._id);
 
       return (
         matchesTechnology &&
@@ -325,14 +177,7 @@ export default function InterviewPreparationPage() {
         matchesSaved
       );
     });
-  }, [
-    technology,
-    difficulty,
-    topic,
-    search,
-    saved,
-    showSavedOnly,
-  ]);
+  }, [questions, technology, difficulty, topic, search, saved, showSavedOnly]);
 
   const toggleCompleted = (id: string) => {
     setCompleted((current) =>
@@ -358,487 +203,475 @@ export default function InterviewPreparationPage() {
     setShowSavedOnly(false);
   };
 
-  const progress = Math.round(
-    (completed.length / questions.length) * 100
-  );
+  const progress = Math.round((completed.length / questions.length) * 100);
 
   return (
-<AuthGuard>
-<div className="min-h-screen bg-[#080b14] text-slate-100">
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)}/>
+    <AuthGuard>
+      <div className="min-h-screen bg-[#080b14] text-slate-100">
+        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="min-h-screen lg:pl-64">
-      <Topbar onMenuClick={() => setSidebarOpen(true)} />
+        <div className="min-h-screen lg:pl-64">
+          <Topbar onMenuClick={() => setSidebarOpen(true)} />
 
-        <main className="mx-auto max-w-[1500px] px-4 pb-12 pt-6 sm:px-6 lg:px-8">
-          {/* Page heading */}
-          <div className="mb-8 flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
-            <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-violet-500/20 bg-violet-500/10 px-3 py-1.5 text-xs font-medium text-violet-300">
-                <Sparkles size={14} />
-                YOUR NEXT INTERVIEW STARTS HERE
-              </div>
-
-              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                Interview Preparation
-              </h1>
-
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400 sm:text-base">
-                Practice practical questions, revise key concepts, and
-                track your progress one topic at a time.
-              </p>
-            </div>
-
-            {/* Progress card */}
-            <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-[#111624] p-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-500/15 text-violet-300">
-                <Target size={22} />
-              </div>
-
+          <main className="mx-auto max-w-[1500px] px-4 pb-12 pt-6 sm:px-6 lg:px-8">
+            {/* Page heading */}
+            <div className="mb-8 flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
               <div>
-                <p className="text-xs text-slate-400">Your progress</p>
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-violet-500/20 bg-violet-500/10 px-3 py-1.5 text-xs font-medium text-violet-300">
+                  <Sparkles size={14} />
+                  YOUR NEXT INTERVIEW STARTS HERE
+                </div>
 
-                <p className="mt-1 text-xl font-semibold">
-                  {completed.length}
-                  <span className="text-sm font-normal text-slate-500">
-                    {" "}
-                    / {questions.length} questions
-                  </span>
+                <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                  Interview Preparation
+                </h1>
+
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400 sm:text-base">
+                  Practice practical questions, revise key concepts, and track
+                  your progress one topic at a time.
                 </p>
-
-                <div className="mt-2 h-1.5 w-40 overflow-hidden rounded-full bg-white/10">
-                  <div
-                    className="h-full rounded-full bg-violet-500 transition-all"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
               </div>
 
-              <span className="text-sm font-semibold text-violet-300">
-                {progress}%
-              </span>
-            </div>
-          </div>
+              {/* Progress card */}
+              <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-[#111624] p-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-500/15 text-violet-300">
+                  <Target size={22} />
+                </div>
 
-          {/* Statistics */}
-          <section className="mb-7 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {[
-              {
-                label: "Available questions",
-                value: questions.length,
-                icon: BookOpen,
-                color: "text-sky-300 bg-sky-400/10",
-              },
-              {
-                label: "Technologies",
-                value: technologies.length - 1,
-                icon: Code2,
-                color: "text-violet-300 bg-violet-400/10",
-              },
-              {
-                label: "Completed",
-                value: completed.length,
-                icon: CheckCircle2,
-                color: "text-emerald-300 bg-emerald-400/10",
-              },
-              {
-                label: "Bookmarked",
-                value: saved.length,
-                icon: BookmarkCheck,
-                color: "text-amber-300 bg-amber-400/10",
-              },
-            ].map((stat) => {
-              const Icon = stat.icon;
+                <div>
+                  <p className="text-xs text-slate-400">Your progress</p>
 
-              return (
-                <div
-                  key={stat.label}
-                  className="rounded-2xl border border-white/[0.08] bg-[#111624] p-4 sm:p-5"
-                >
-                  <div
-                    className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl ${stat.color}`}
-                  >
-                    <Icon size={19} />
-                  </div>
-
-                  <p className="text-2xl font-bold">{stat.value}</p>
-
-                  <p className="mt-1 text-xs text-slate-400 sm:text-sm">
-                    {stat.label}
+                  <p className="mt-1 text-xl font-semibold">
+                    {completed.length}
+                    <span className="text-sm font-normal text-slate-500">
+                      {" "}
+                      / {questions.length} questions
+                    </span>
                   </p>
+
+                  <div className="mt-2 h-1.5 w-40 overflow-hidden rounded-full bg-white/10">
+                    <div
+                      className="h-full rounded-full bg-violet-500 transition-all"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
                 </div>
-              );
-            })}
-          </section>
 
-          <div className="grid items-start gap-6 xl:grid-cols-[260px_minmax(0,1fr)]">
-            {/* Technology sidebar */}
-            <aside className="rounded-2xl border border-white/[0.08] bg-[#111624] p-4 sm:p-5">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="font-semibold">Technologies</h2>
-                <Code2 size={17} className="text-slate-500" />
+                <span className="text-sm font-semibold text-violet-300">
+                  {progress}%
+                </span>
               </div>
+            </div>
 
-              <div className="space-y-1.5">
-                {technologies.map((item) => {
-                  const active = technology === item.name;
+            {/* Statistics */}
+            <section className="mb-7 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {[
+                {
+                  label: "Available questions",
+                  value: questions.length,
+                  icon: BookOpen,
+                  color: "text-sky-300 bg-sky-400/10",
+                },
+                {
+                  label: "Technologies",
+                  value: technologies.length - 1,
+                  icon: Code2,
+                  color: "text-violet-300 bg-violet-400/10",
+                },
+                {
+                  label: "Completed",
+                  value: completed.length,
+                  icon: CheckCircle2,
+                  color: "text-emerald-300 bg-emerald-400/10",
+                },
+                {
+                  label: "Bookmarked",
+                  value: saved.length,
+                  icon: BookmarkCheck,
+                  color: "text-amber-300 bg-amber-400/10",
+                },
+              ].map((stat) => {
+                const Icon = stat.icon;
 
-                  const count =
-                    item.name === "All technologies"
-                      ? questions.length
-                      : questions.filter(
-                          (question) =>
-                            question.technology === item.name
-                        ).length;
-
-                  return (
-                    <button
-                      key={item.name}
-                      onClick={() => {
-                        setTechnology(item.name);
-                        setTopic("All topics");
-                      }}
-                      className={`flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition ${
-                        active
-                          ? "border-violet-500/20 bg-violet-500/10"
-                          : "border-transparent hover:bg-white/[0.04]"
-                      }`}
+                return (
+                  <div
+                    key={stat.label}
+                    className="rounded-2xl border border-white/[0.08] bg-[#111624] p-4 sm:p-5"
+                  >
+                    <div
+                      className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl ${stat.color}`}
                     >
-                      <span
-                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold ${
+                      <Icon size={19} />
+                    </div>
+
+                    <p className="text-2xl font-bold">{stat.value}</p>
+
+                    <p className="mt-1 text-xs text-slate-400 sm:text-sm">
+                      {stat.label}
+                    </p>
+                  </div>
+                );
+              })}
+            </section>
+
+            <div className="grid items-start gap-6 xl:grid-cols-[260px_minmax(0,1fr)]">
+              {/* Technology sidebar */}
+              <aside className="rounded-2xl border border-white/[0.08] bg-[#111624] p-4 sm:p-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="font-semibold">Technologies</h2>
+                  <Code2 size={17} className="text-slate-500" />
+                </div>
+
+                <div className="space-y-1.5">
+                  {technologies.map((item) => {
+                    const active = technology === item.name;
+
+                    const count =
+                      item.name === "All technologies"
+                        ? questions.length
+                        : questions.filter(
+                            (question) => question.category === item.name
+                          ).length;
+
+                    return (
+                      <button
+                        key={item.name}
+                        onClick={() => {
+                          setTechnology(item.name);
+                          setTopic("All topics");
+                        }}
+                        className={`flex w-full items-center gap-3 rounded-xl border px-3 py-3 text-left transition ${
                           active
-                            ? "bg-violet-500/20 text-violet-200"
-                            : "bg-white/[0.05] text-slate-300"
+                            ? "border-violet-500/20 bg-violet-500/10"
+                            : "border-transparent hover:bg-white/[0.04]"
                         }`}
                       >
-                        {item.icon}
-                      </span>
-
-                      <span className="min-w-0 flex-1">
                         <span
-                          className={`block text-sm font-medium ${
+                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold ${
                             active
-                              ? "text-violet-200"
-                              : "text-slate-200"
+                              ? "bg-violet-500/20 text-violet-200"
+                              : "bg-white/[0.05] text-slate-300"
                           }`}
                         >
-                          {item.name}
+                          {item.icon}
                         </span>
 
-                        <span className="mt-0.5 block text-xs text-slate-500">
-                          {item.subtitle}
-                        </span>
-                      </span>
-
-                      <span className="text-xs text-slate-500">
-                        {count}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="mt-5 rounded-xl border border-violet-500/15 bg-violet-500/[0.06] p-4">
-                <Sparkles
-                  size={17}
-                  className="mb-2 text-violet-300"
-                />
-
-                <p className="text-sm font-medium">
-                  Small steps add up
-                </p>
-
-                <p className="mt-1 text-xs leading-5 text-slate-400">
-                  Complete a few questions daily and revisit your saved
-                  questions before an interview.
-                </p>
-              </div>
-            </aside>
-
-            {/* Questions section */}
-            <section className="min-w-0">
-              {/* Search and filters */}
-              <div className="mb-4 rounded-2xl border border-white/[0.08] bg-[#111624] p-4 sm:p-5">
-                <div className="flex flex-col gap-3 lg:flex-row">
-                  <label className="relative flex-1">
-                    <Search
-                      size={18}
-                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500"
-                    />
-
-                    <input
-                      value={search}
-                      onChange={(event) => setSearch(event.target.value)}
-                      placeholder="Search questions, topics, answers..."
-                      className="w-full rounded-xl border border-white/10 bg-[#0a0e18] py-3 pl-11 pr-4 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-violet-500/50"
-                    />
-                  </label>
-
-                  <div className="flex flex-col gap-3 sm:flex-row">
-                    <label className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0a0e18] px-3">
-                      <Filter size={15} className="text-slate-500" />
-
-                      <select
-                        value={difficulty}
-                        onChange={(event) =>
-                          setDifficulty(event.target.value)
-                        }
-                        className="w-full bg-transparent py-3 text-sm text-slate-300 outline-none"
-                      >
-                        <option className="bg-[#111624]">
-                          All levels
-                        </option>
-                        <option className="bg-[#111624]">
-                          Beginner
-                        </option>
-                        <option className="bg-[#111624]">
-                          Intermediate
-                        </option>
-                        <option className="bg-[#111624]">
-                          Advanced
-                        </option>
-                      </select>
-                    </label>
-
-                    <label className="rounded-xl border border-white/10 bg-[#0a0e18] px-3">
-                      <select
-                        value={topic}
-                        onChange={(event) => setTopic(event.target.value)}
-                        className="w-full min-w-36 bg-transparent py-3 text-sm text-slate-300 outline-none"
-                      >
-                        {topics.map((item) => (
-                          <option
-                            key={item}
-                            value={item}
-                            className="bg-[#111624]"
-                          >
-                            {item}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm text-slate-400">
-                    <span className="font-semibold text-slate-200">
-                      {filteredQuestions.length}
-                    </span>{" "}
-                    questions found
-                  </p>
-
-                  <button
-                    onClick={() => setShowSavedOnly((value) => !value)}
-                    className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition ${
-                      showSavedOnly
-                        ? "border-amber-400/30 bg-amber-400/10 text-amber-200"
-                        : "border-white/10 text-slate-400 hover:bg-white/[0.04]"
-                    }`}
-                  >
-                    <BookmarkCheck size={15} />
-
-                    {showSavedOnly
-                      ? "Showing saved"
-                      : "Saved questions only"}
-                  </button>
-                </div>
-              </div>
-
-              {/* Question cards */}
-              <div className="space-y-3">
-                {filteredQuestions.map((question, index) => {
-                  const isExpanded = expandedId === question.id;
-                  const isCompleted = completed.includes(question.id);
-                  const isSaved = saved.includes(question.id);
-
-                  return (
-                    <article
-                      key={question.id}
-                      className={`overflow-hidden rounded-2xl border bg-[#111624] transition ${
-                        isExpanded
-                          ? "border-violet-500/25"
-                          : "border-white/[0.08]"
-                      }`}
-                    >
-                      <div className="flex items-start gap-3 p-4 sm:p-5">
-                        <button
-                          aria-label={
-                            isCompleted
-                              ? "Mark incomplete"
-                              : "Mark complete"
-                          }
-                          onClick={() => toggleCompleted(question.id)}
-                          className="mt-0.5 shrink-0 text-slate-500 hover:text-emerald-300"
-                        >
-                          {isCompleted ? (
-                            <CheckCircle2
-                              size={21}
-                              className="text-emerald-300"
-                            />
-                          ) : (
-                            <Circle size={21} />
-                          )}
-                        </button>
-
-                        <button
-                          className="min-w-0 flex-1 text-left"
-                          onClick={() =>
-                            setExpandedId(
-                              isExpanded ? null : question.id
-                            )
-                          }
-                        >
-                          <div className="mb-2 flex flex-wrap items-center gap-2">
-                            <span className="text-[11px] font-medium uppercase tracking-wider text-slate-500">
-                              Question{" "}
-                              {String(index + 1).padStart(2, "0")}
-                            </span>
-
-                            <span className="rounded-md border border-white/10 bg-white/[0.03] px-2 py-1 text-[11px] text-slate-400">
-                              {question.technology}
-                            </span>
-
-                            <span
-                              className={`rounded-md border px-2 py-1 text-[11px] ${difficultyStyles[question.difficulty]}`}
-                            >
-                              {question.difficulty}
-                            </span>
-                          </div>
-
-                          <h3
-                            className={`text-sm font-semibold leading-6 sm:text-base ${
-                              isCompleted
-                                ? "text-slate-400"
-                                : "text-slate-100"
+                        <span className="min-w-0 flex-1">
+                          <span
+                            className={`block text-sm font-medium ${
+                              active ? "text-violet-200" : "text-slate-200"
                             }`}
                           >
-                            {question.question}
-                          </h3>
+                            {item.name}
+                          </span>
 
-                          <p className="mt-1 text-xs text-slate-500">
-                            {question.topic}
-                          </p>
-                        </button>
+                          <span className="mt-0.5 block text-xs text-slate-500">
+                            {item.subtitle}
+                          </span>
+                        </span>
 
-                        <button
-                          aria-label={
-                            isSaved
-                              ? "Remove bookmark"
-                              : "Bookmark question"
+                        <span className="text-xs text-slate-500">{count}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-5 rounded-xl border border-violet-500/15 bg-violet-500/[0.06] p-4">
+                  <Sparkles size={17} className="mb-2 text-violet-300" />
+
+                  <p className="text-sm font-medium">Small steps add up</p>
+
+                  <p className="mt-1 text-xs leading-5 text-slate-400">
+                    Complete a few questions daily and revisit your saved
+                    questions before an interview.
+                  </p>
+                </div>
+              </aside>
+
+              {/* Questions section */}
+              <section className="min-w-0">
+                {/* Search and filters */}
+                <div className="mb-4 rounded-2xl border border-white/[0.08] bg-[#111624] p-4 sm:p-5">
+                  <div className="flex flex-col gap-3 lg:flex-row">
+                    <label className="relative flex-1">
+                      <Search
+                        size={18}
+                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500"
+                      />
+
+                      <input
+                        value={search}
+                        onChange={(event) => setSearch(event.target.value)}
+                        placeholder="Search questions, topics, answers..."
+                        className="w-full rounded-xl border border-white/10 bg-[#0a0e18] py-3 pl-11 pr-4 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-violet-500/50"
+                      />
+                    </label>
+
+                    <div className="flex flex-col gap-3 sm:flex-row">
+                      <label className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0a0e18] px-3">
+                        <Filter size={15} className="text-slate-500" />
+
+                        <select
+                          value={difficulty}
+                          onChange={(event) =>
+                            setDifficulty(event.target.value)
                           }
-                          onClick={() => toggleSaved(question.id)}
-                          className={`rounded-lg p-2 transition ${
-                            isSaved
-                              ? "text-amber-300"
-                              : "text-slate-500 hover:bg-white/[0.05] hover:text-slate-200"
-                          }`}
+                          className="w-full bg-transparent py-3 text-sm text-slate-300 outline-none"
                         >
-                          <BookmarkCheck size={18} />
-                        </button>
+                          <option value="All levels" className="bg-[#111624]">
+                            All levels
+                          </option>
 
-                        <button
-                          aria-label={
-                            isExpanded
-                              ? "Collapse answer"
-                              : "Expand answer"
-                          }
-                          onClick={() =>
-                            setExpandedId(
-                              isExpanded ? null : question.id
-                            )
-                          }
-                          className="rounded-lg p-2 text-slate-500 hover:bg-white/[0.05]"
+                          <option value="Easy" className="bg-[#111624]">
+                            Easy
+                          </option>
+
+                          <option value="Medium" className="bg-[#111624]">
+                            Medium
+                          </option>
+
+                          <option value="Hard" className="bg-[#111624]">
+                            Hard
+                          </option>
+                        </select>
+                      </label>
+
+                      <label className="rounded-xl border border-white/10 bg-[#0a0e18] px-3">
+                        <select
+                          value={topic}
+                          onChange={(event) => setTopic(event.target.value)}
+                          className="w-full min-w-36 bg-transparent py-3 text-sm text-slate-300 outline-none"
                         >
-                          {isExpanded ? (
-                            <ChevronUp size={18} />
-                          ) : (
-                            <ChevronDown size={18} />
-                          )}
-                        </button>
-                      </div>
-
-                      {isExpanded && (
-                        <div className="border-t border-white/[0.07] px-4 pb-5 pt-4 sm:px-5 sm:pl-14">
-                          <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-violet-300">
-                            <BookOpen size={14} />
-                            Answer
-                          </div>
-
-                          <p className="text-sm leading-7 text-slate-300">
-                            {question.answer}
-                          </p>
-
-                          {question.code && (
-                            <pre className="mt-4 overflow-x-auto rounded-xl border border-white/[0.08] bg-[#080b14] p-4 text-xs leading-6 text-emerald-200">
-                              <code>{question.code}</code>
-                            </pre>
-                          )}
-
-                          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                            <span className="inline-flex items-center gap-1.5 text-xs text-slate-500">
-                              <Clock3 size={13} />
-                              Suggested review: 2–4 min
-                            </span>
-
-                            <button
-                              onClick={() =>
-                                toggleCompleted(question.id)
-                              }
-                              className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition ${
-                                isCompleted
-                                  ? "border border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
-                                  : "bg-violet-600 text-white hover:bg-violet-500"
-                              }`}
+                          {topics.map((item) => (
+                            <option
+                              key={item}
+                              value={item}
+                              className="bg-[#111624]"
                             >
-                              <CheckCircle2 size={15} />
+                              {item}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                  </div>
 
-                              {isCompleted
-                                ? "Completed — mark again"
-                                : "Mark as completed"}
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </article>
-                  );
-                })}
-
-                {/* Empty state */}
-                {filteredQuestions.length === 0 && (
-                  <div className="rounded-2xl border border-dashed border-white/10 bg-[#111624] px-6 py-14 text-center">
-                    <Search
-                      size={28}
-                      className="mx-auto mb-3 text-slate-600"
-                    />
-
-                    <h3 className="font-semibold">
-                      No questions found
-                    </h3>
-
-                    <p className="mt-2 text-sm text-slate-500">
-                      Try another search term or reset your filters.
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-sm text-slate-400">
+                      <span className="font-semibold text-slate-200">
+                        {filteredQuestions.length}
+                      </span>{" "}
+                      questions found
                     </p>
 
                     <button
-                      onClick={resetFilters}
-                      className="mt-4 rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-500"
+                      onClick={() => setShowSavedOnly((value) => !value)}
+                      className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition ${
+                        showSavedOnly
+                          ? "border-amber-400/30 bg-amber-400/10 text-amber-200"
+                          : "border-white/10 text-slate-400 hover:bg-white/[0.04]"
+                      }`}
                     >
-                      Reset filters
+                      <BookmarkCheck size={15} />
+
+                      {showSavedOnly ? "Showing saved" : "Saved questions only"}
                     </button>
                   </div>
-                )}
-              </div>
+                </div>
 
-              <p className="mt-5 text-center text-xs leading-5 text-slate-600">
-                Progress and bookmarks are stored in this browser for
-                now. Connect an API later to sync them across devices.
-              </p>
-            </section>
-          </div>
-        </main>
+                {isLoading && (
+                  <div className="rounded-2xl border border-white/[0.08] bg-[#111624] p-10 text-center">
+                    <p className="text-sm text-slate-400">
+                      Loading interview questions...
+                    </p>
+                  </div>
+                )}
+
+                {error && (
+                  <div className="mb-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                    {error}
+                  </div>
+                )}
+
+                {/* Question cards */}
+                <div className="space-y-3">
+                  {!isLoading &&
+                    filteredQuestions.map((question, index) => {
+                      const isExpanded = expandedId === question._id;
+                      const isCompleted = completed.includes(question._id);
+                      const isSaved = saved.includes(question._id);
+
+                      return (
+                        <article
+                          key={question._id}
+                          className={`overflow-hidden rounded-2xl border bg-[#111624] transition ${
+                            isExpanded
+                              ? "border-violet-500/25"
+                              : "border-white/[0.08]"
+                          }`}
+                        >
+                          <div className="flex items-start gap-3 p-4 sm:p-5">
+                            <button
+                              aria-label={
+                                isCompleted
+                                  ? "Mark incomplete"
+                                  : "Mark complete"
+                              }
+                              onClick={() => toggleCompleted(question._id)}
+                              className="mt-0.5 shrink-0 text-slate-500 hover:text-emerald-300"
+                            >
+                              {isCompleted ? (
+                                <CheckCircle2
+                                  size={21}
+                                  className="text-emerald-300"
+                                />
+                              ) : (
+                                <Circle size={21} />
+                              )}
+                            </button>
+
+                            <button
+                              className="min-w-0 flex-1 text-left"
+                              onClick={() =>
+                                setExpandedId(isExpanded ? null : question._id)
+                              }
+                            >
+                              <div className="mb-2 flex flex-wrap items-center gap-2">
+                                <span className="text-[11px] font-medium uppercase tracking-wider text-slate-500">
+                                  Question {String(index + 1).padStart(2, "0")}
+                                </span>
+
+                                <span className="rounded-md border border-white/10 bg-white/[0.03] px-2 py-1 text-[11px] text-slate-400">
+                                  {question.category}
+                                </span>
+
+                                <span
+                                  className={`rounded-md border px-2 py-1 text-[11px] ${
+                                    difficultyStyles[question.difficulty]
+                                  }`}
+                                >
+                                  {question.difficulty}
+                                </span>
+                              </div>
+
+                              <h3
+                                className={`text-sm font-semibold leading-6 sm:text-base ${
+                                  isCompleted
+                                    ? "text-slate-400"
+                                    : "text-slate-100"
+                                }`}
+                              >
+                                {question.question}
+                              </h3>
+
+                              <p className="mt-1 text-xs text-slate-500">
+                                {question.topic}
+                              </p>
+                            </button>
+
+                            <button
+                              aria-label={
+                                isSaved
+                                  ? "Remove bookmark"
+                                  : "Bookmark question"
+                              }
+                              onClick={() => toggleSaved(question._id)}
+                              className={`rounded-lg p-2 transition ${
+                                isSaved
+                                  ? "text-amber-300"
+                                  : "text-slate-500 hover:bg-white/[0.05] hover:text-slate-200"
+                              }`}
+                            >
+                              <BookmarkCheck size={18} />
+                            </button>
+
+                            <button
+                              aria-label={
+                                isExpanded ? "Collapse answer" : "Expand answer"
+                              }
+                              onClick={() =>
+                                setExpandedId(isExpanded ? null : question._id)
+                              }
+                              className="rounded-lg p-2 text-slate-500 hover:bg-white/[0.05]"
+                            >
+                              {isExpanded ? (
+                                <ChevronUp size={18} />
+                              ) : (
+                                <ChevronDown size={18} />
+                              )}
+                            </button>
+                          </div>
+
+                          {isExpanded && (
+                            <div className="border-t border-white/[0.07] px-4 pb-5 pt-4 sm:px-5 sm:pl-14">
+                              <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-violet-300">
+                                <BookOpen size={14} />
+                                Answer
+                              </div>
+
+                              <p className="text-sm leading-7 text-slate-300">
+                                {question.answer}
+                              </p>
+                              <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                                <span className="inline-flex items-center gap-1.5 text-xs text-slate-500">
+                                  <Clock3 size={13} />
+                                  Suggested review: 2–4 min
+                                </span>
+
+                                <button
+                                  onClick={() => toggleCompleted(question._id)}
+                                  className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition ${
+                                    isCompleted
+                                      ? "border border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+                                      : "bg-violet-600 text-white hover:bg-violet-500"
+                                  }`}
+                                >
+                                  <CheckCircle2 size={15} />
+
+                                  {isCompleted
+                                    ? "Completed — mark again"
+                                    : "Mark as completed"}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </article>
+                      );
+                    })}
+
+                  {/* Empty state */}
+                  {!isLoading && !error && filteredQuestions.length === 0 && (
+                    <div className="rounded-2xl border border-dashed border-white/10 bg-[#111624] px-6 py-14 text-center">
+                      <Search
+                        size={28}
+                        className="mx-auto mb-3 text-slate-600"
+                      />
+
+                      <h3 className="font-semibold">No questions found</h3>
+
+                      <p className="mt-2 text-sm text-slate-500">
+                        Try another search term or reset your filters.
+                      </p>
+
+                      <button
+                        onClick={resetFilters}
+                        className="mt-4 rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-500"
+                      >
+                        Reset filters
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <p className="mt-5 text-center text-xs leading-5 text-slate-600">
+                  Progress and bookmarks are stored in this browser for now.
+                  Connect an API later to sync them across devices.
+                </p>
+              </section>
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
-</AuthGuard>
+    </AuthGuard>
   );
 }

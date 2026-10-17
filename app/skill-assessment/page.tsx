@@ -1,504 +1,1214 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+import {
+  ArrowLeft,
+  ArrowRight,
+  BrainCircuit,
+  Check,
+  CheckCircle2,
+  ChevronRight,
+  CircleAlert,
+  Clock3,
+  History,
+  Loader2,
+  Play,
+  RotateCcw,
+  Sparkles,
+  Target,
+  Trash2,
+  Trophy,
+  X,
+} from "lucide-react";
+
+import AuthGuard from "../components/AuthGuard";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
+
 import {
-  BrainCircuit,
-  CheckCircle2,
-  XCircle,
-  Trophy,
-  Clock3,
-  Target,
-  RotateCcw,
-  ChevronRight,
-  ChevronLeft,
-  Code2,
-} from "lucide-react";
-import AuthGuard from "../components/AuthGuard";
+  deleteSkillAssessment,
+  getAssessmentBankCategories,
+  getAssessmentBankTopics,
+  getSkillAssessment,
+  getSkillAssessments,
+  startSkillAssessment,
+  submitSkillAssessment,
+  type AssessmentDifficulty,
+  type SkillAssessment,
+} from "@/services/skillAssessmentApi";
 
-type Question = {
-  id: number;
-  question: string;
-  options: string[];
-  correctAnswer: number;
-};
+type PageMode = "setup" | "assessment" | "result";
 
-const questions: Question[] = [
-  {
-    id: 1,
-    question: "Which keyword is used to declare a block-scoped variable?",
-    options: ["var", "let", "function", "define"],
-    correctAnswer: 1,
-  },
-  {
-    id: 2,
-    question: "Which React Hook is used to manage component state?",
-    options: ["useEffect", "useContext", "useState", "useMemo"],
-    correctAnswer: 2,
-  },
-  {
-    id: 3,
-    question: "What is the purpose of the Node.js event loop?",
-    options: [
-      "Create HTML pages",
-      "Handle asynchronous operations",
-      "Connect only to MongoDB",
-      "Compile React components",
-    ],
-    correctAnswer: 1,
-  },
-  {
-    id: 4,
-    question: "Which MongoDB method is commonly used to retrieve documents?",
-    options: ["select()", "get()", "find()", "fetch()"],
-    correctAnswer: 2,
-  },
-  {
-    id: 5,
-    question: "What does JWT commonly provide in a web application?",
-    options: [
-      "Database indexing",
-      "Authentication information",
-      "CSS styling",
-      "Image optimization",
-    ],
-    correctAnswer: 1,
-  },
+const fallbackTechnologies = [
+  "JavaScript",
+  "TypeScript",
+  "React.js",
+  "Next.js",
+  "Node.js",
+  "Express.js",
+  "MongoDB",
+  "MySQL",
+  "AWS",
+  "Docker",
+  "Redis",
+  "System Design",
 ];
+
+const questionCounts = [1, 5, 10, 15, 20];
+
+/* =========================================================
+   PAGE
+========================================================= */
 
 export default function SkillAssessmentPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const [started, setStarted] = useState(false);
+  const [mode, setMode] = useState<PageMode>("setup");
 
-  const [currentQuestion, setCurrentQuestion] = useState(0);
+  /* =====================================================
+     CONFIG
+  ===================================================== */
 
-  const [answers, setAnswers] = useState<
-    Record<number, number>
-  >({});
+  const [technology, setTechnology] = useState("Node.js");
 
-  const [finished, setFinished] = useState(false);
+  const [technologies, setTechnologies] =
+    useState<string[]>(fallbackTechnologies);
 
-  const selectAnswer = (optionIndex: number) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [currentQuestion]: optionIndex,
+  const [topics, setTopics] = useState<string[]>(["General"]);
+
+  const [topic, setTopic] = useState("General");
+
+  const [difficulty, setDifficulty] = useState<AssessmentDifficulty>("Medium");
+
+  const [questionCount, setQuestionCount] = useState(10);
+
+  /* =====================================================
+     ASSESSMENT
+  ===================================================== */
+
+  const [assessment, setAssessment] = useState<SkillAssessment | null>(null);
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+
+  /* =====================================================
+     HISTORY
+  ===================================================== */
+
+  const [history, setHistory] = useState<SkillAssessment[]>([]);
+
+  /* =====================================================
+     LOADING
+  ===================================================== */
+
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [isStarting, setIsStarting] = useState(false);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const [error, setError] = useState("");
+
+  const [message, setMessage] = useState("");
+
+  //Load technologies
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const response = await getAssessmentBankCategories();
+
+        if (response.categories.length > 0) {
+          const merged = Array.from(
+            new Set([...response.categories, ...fallbackTechnologies])
+          );
+
+          setTechnologies(merged);
+        }
+      } catch (error) {
+        console.error("Load assessment categories:", error);
+      }
+    };
+
+    loadCategories();
+  }, []);
+
+  useEffect(() => {
+    const loadTopics = async () => {
+      try {
+        const response = await getAssessmentBankTopics(technology);
+
+        setTopics([
+          "General",
+
+          ...response.topics.filter((item) => item !== "General"),
+        ]);
+
+        setTopic("General");
+      } catch (error) {
+        console.error("Load assessment topics:", error);
+
+        setTopics(["General"]);
+
+        setTopic("General");
+      }
+    };
+
+    loadTopics();
+  }, [technology]);
+
+  /* =====================================================
+     LOAD HISTORY
+  ===================================================== */
+
+  const loadHistory = async () => {
+    try {
+      setIsLoading(true);
+
+      const response = await getSkillAssessments();
+
+      setHistory(response.assessments || []);
+    } catch (err) {
+      console.error("Assessment history:", err);
+
+      setError(
+        err instanceof Error ? err.message : "Failed to load assessments"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadHistory();
+  }, []);
+
+  /* =====================================================
+     CURRENT QUESTION
+  ===================================================== */
+
+  const currentQuestion = assessment?.questions[currentIndex];
+
+  const answeredCount = Object.values(answers).filter(Boolean).length;
+
+  const progress = assessment
+    ? Math.round(((currentIndex + 1) / assessment.questions.length) * 100)
+    : 0;
+
+  /* =====================================================
+     START
+  ===================================================== */
+
+  const handleStart = async () => {
+    try {
+      setError("");
+      setMessage("");
+
+      setIsStarting(true);
+
+      const response = await startSkillAssessment({
+        technology,
+
+        topic,
+
+        difficulty,
+
+        questionCount,
+      });
+
+      const created = response.assessment;
+
+      setAssessment(created);
+
+      if (response.generatedCount && response.generatedCount > 0) {
+        setMessage(
+          `${response.generatedCount} new assessment questions were generated and saved to your question bank.`
+        );
+      } else {
+        setMessage("Assessment loaded from your saved question bank.");
+      }
+
+      if (response.usedFallback) {
+        setMessage(
+          `Started with ${response.actualQuestionCount} available questions instead of ${response.requestedQuestionCount}.`
+        );
+      }
+
+      setCurrentIndex(0);
+
+      const savedAnswers: Record<string, string> = {};
+
+      created.questions.forEach((question) => {
+        if (question.selectedAnswer) {
+          savedAnswers[question._id] = question.selectedAnswer;
+        }
+      });
+
+      setAnswers(savedAnswers);
+
+      setMode("assessment");
+
+      await loadHistory();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to start assessment"
+      );
+    } finally {
+      setIsStarting(false);
+    }
+  };
+
+  /* =====================================================
+     SELECT ANSWER
+  ===================================================== */
+
+  const handleSelectAnswer = (questionId: string, option: string) => {
+    setAnswers((previous) => ({
+      ...previous,
+
+      [questionId]: option,
     }));
   };
 
-  const nextQuestion = () => {
-    if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion((prev) => prev + 1);
-    } else {
-      setFinished(true);
+  /* =====================================================
+     NEXT
+  ===================================================== */
+
+  const handleNext = () => {
+    if (!assessment) {
+      return;
+    }
+
+    if (currentIndex < assessment.questions.length - 1) {
+      setCurrentIndex((previous) => previous + 1);
     }
   };
 
-  const previousQuestion = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion((prev) => prev - 1);
+  /* =====================================================
+     PREVIOUS
+  ===================================================== */
+
+  const handlePrevious = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex((previous) => previous - 1);
     }
   };
 
-  const calculateScore = () => {
-    return questions.reduce((score, question, index) => {
-      if (answers[index] === question.correctAnswer) {
-        return score + 1;
+  /* =====================================================
+     SUBMIT
+  ===================================================== */
+
+  const handleSubmit = async () => {
+    if (!assessment) {
+      return;
+    }
+
+    if (answeredCount === 0) {
+      setError("Please answer at least one question.");
+
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      setError("");
+
+      const answerList = assessment.questions.map((question) => ({
+        questionId: question._id,
+
+        selectedAnswer: answers[question._id] || "",
+      }));
+
+      const response = await submitSkillAssessment(assessment._id, answerList);
+
+      setAssessment(response.assessment);
+
+      setMode("result");
+
+      await loadHistory();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to submit assessment"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  /* =====================================================
+     OPEN HISTORY
+  ===================================================== */
+
+  const handleOpenAssessment = async (id: string) => {
+    try {
+      setError("");
+
+      const response = await getSkillAssessment(id);
+
+      const item = response.assessment;
+
+      setAssessment(item);
+
+      const existingAnswers: Record<string, string> = {};
+
+      item.questions.forEach((question) => {
+        if (question.selectedAnswer) {
+          existingAnswers[question._id] = question.selectedAnswer;
+        }
+      });
+
+      setAnswers(existingAnswers);
+
+      if (item.status === "completed") {
+        setMode("result");
+      } else {
+        setCurrentIndex(0);
+
+        setMode("assessment");
       }
-
-      return score;
-    }, 0);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to open assessment"
+      );
+    }
   };
 
-  const restartQuiz = () => {
-    setStarted(false);
-    setFinished(false);
-    setCurrentQuestion(0);
+  /* =====================================================
+     DELETE
+  ===================================================== */
+
+  const handleDelete = async (id: string) => {
+    try {
+      setDeletingId(id);
+
+      await deleteSkillAssessment(id);
+
+      setHistory((previous) => previous.filter((item) => item._id !== id));
+
+      if (assessment?._id === id) {
+        handleNewAssessment();
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to delete assessment"
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  /* =====================================================
+     NEW ASSESSMENT
+  ===================================================== */
+
+  const handleNewAssessment = () => {
+    setAssessment(null);
+
     setAnswers({});
+
+    setCurrentIndex(0);
+
+    setError("");
+
+    setMessage("");
+
+    setMode("setup");
   };
 
-  const score = calculateScore();
+  /* =====================================================
+     HISTORY STATS
+  ===================================================== */
 
-  const percentage = Math.round(
-    (score / questions.length) * 100
+  const completedHistory = useMemo(
+    () => history.filter((item) => item.status === "completed"),
+    [history]
   );
 
+  const averageScore = useMemo(() => {
+    if (completedHistory.length === 0) {
+      return 0;
+    }
+
+    const total = completedHistory.reduce(
+      (sum, item) => sum + item.percentage,
+      0
+    );
+
+    return Math.round(total / completedHistory.length);
+  }, [completedHistory]);
+
+  /* =====================================================
+     UI
+  ===================================================== */
+
   return (
-<AuthGuard>
-<div className="min-h-screen bg-[#080c14] text-white">
-      <Sidebar
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
+    <AuthGuard>
+      <div className="min-h-screen bg-[#080b12] text-white">
+        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="min-h-screen lg:pl-64">
-        <Topbar
-          onMenuClick={() => setSidebarOpen(true)}
-        />
+        <div className="lg:pl-64">
+          <Topbar onMenuClick={() => setSidebarOpen(true)} />
 
-        <main className="p-4 md:p-6 lg:p-8">
-          {/* HEADER */}
+          <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+            {/* HEADER */}
 
-          <div className="mb-8">
-            <div className="mb-2 flex items-center gap-2 text-purple-400">
-              <BrainCircuit size={18} />
+            <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+              <div>
+                <div className="flex items-center gap-2">
+                  <BrainCircuit size={22} className="text-violet-300" />
 
-              <span className="text-sm font-medium">
-                Test Your Knowledge
-              </span>
-            </div>
-
-            <h1 className="text-3xl font-bold">
-              Skill Assessment
-            </h1>
-
-            <p className="mt-2 text-gray-400">
-              Test your technical knowledge and identify areas
-              where you need improvement.
-            </p>
-          </div>
-
-          {!started ? (
-            /* START SCREEN */
-
-            <div className="grid gap-6 lg:grid-cols-3">
-              <div className="rounded-2xl border border-gray-800 bg-[#101722] p-6 lg:col-span-2">
-                <div className="mb-7 flex items-center gap-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-purple-500/10">
-                    <Code2 className="text-purple-400" />
-                  </div>
-
-                  <div>
-                    <h2 className="text-xl font-semibold">
-                      MERN Stack Assessment
-                    </h2>
-
-                    <p className="mt-1 text-sm text-gray-400">
-                      JavaScript, React, Node.js and MongoDB
-                    </p>
-                  </div>
+                  <h1 className="text-2xl font-bold">Skill Assessment</h1>
                 </div>
 
-                <div className="mb-8 grid gap-4 sm:grid-cols-3">
-                  <InfoCard
-                    icon={<Target size={20} />}
-                    title={`${questions.length} Questions`}
-                    text="Multiple choice"
-                  />
-
-                  <InfoCard
-                    icon={<Clock3 size={20} />}
-                    title="10 Minutes"
-                    text="Recommended time"
-                  />
-
-                  <InfoCard
-                    icon={<Trophy size={20} />}
-                    title="70% Score"
-                    text="Recommended passing"
-                  />
-                </div>
-
-                <button
-                  onClick={() => setStarted(true)}
-                  className="rounded-xl bg-purple-600 px-6 py-3 text-sm font-semibold transition hover:bg-purple-700"
-                >
-                  Start Assessment
-                </button>
+                <p className="mt-2 text-sm text-slate-500">
+                  Test your technical skills with AI-powered assessments.
+                </p>
               </div>
 
-              <div className="rounded-2xl border border-gray-800 bg-[#101722] p-6">
-                <h3 className="mb-5 font-semibold">
-                  Assessment Topics
-                </h3>
+              {mode !== "setup" && (
+                <button
+                  type="button"
+                  onClick={handleNewAssessment}
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-sm text-slate-300 hover:bg-white/[0.04]"
+                >
+                  <ArrowLeft size={16} />
+                  Assessments
+                </button>
+              )}
+            </div>
 
-                <div className="space-y-4">
-                  {[
-                    "JavaScript",
-                    "React.js",
-                    "Node.js",
-                    "Express.js",
-                    "MongoDB",
-                  ].map((topic) => (
-                    <div
-                      key={topic}
-                      className="flex items-center gap-3"
-                    >
-                      <CheckCircle2
-                        size={17}
-                        className="text-green-400"
+            {error && (
+              <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-500/20 bg-red-500/[0.06] p-4 text-sm text-red-300">
+                <CircleAlert size={17} className="mt-0.5 shrink-0" />
+
+                {error}
+              </div>
+            )}
+
+            {message && (
+              <div className="mb-5 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] p-4 text-sm text-emerald-300">
+                {message}
+              </div>
+            )}
+
+            {/* =================================================
+                SETUP
+            ================================================= */}
+
+            {mode === "setup" && (
+              <>
+                {/* STATS */}
+
+                <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  <StatCard
+                    title="Assessments"
+                    value={history.length}
+                    icon={BrainCircuit}
+                  />
+
+                  <StatCard
+                    title="Completed"
+                    value={completedHistory.length}
+                    icon={CheckCircle2}
+                  />
+
+                  <StatCard
+                    title="Average Score"
+                    value={`${averageScore}%`}
+                    icon={Target}
+                  />
+
+                  <StatCard
+                    title="Best Score"
+                    value={`${
+                      completedHistory.length
+                        ? Math.max(
+                            ...completedHistory.map((item) => item.percentage)
+                          )
+                        : 0
+                    }%`}
+                    icon={Trophy}
+                  />
+                </div>
+
+                <div className="grid gap-6 lg:grid-cols-[1.1fr_.9fr]">
+                  {/* CONFIG */}
+
+                  <div className="rounded-2xl border border-white/[0.08] bg-[#101521] p-6">
+                    <div className="mb-6 flex items-center gap-2">
+                      <Sparkles size={18} className="text-violet-300" />
+
+                      <div>
+                        <h2 className="font-semibold">Start Assessment</h2>
+
+                        <p className="mt-1 text-xs text-slate-500">
+                          Configure your technical assessment.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      <SelectField
+                        label="Technology"
+                        value={technology}
+                        options={technologies}
+                        onChange={setTechnology}
                       />
 
-                      <span className="text-sm text-gray-400">
-                        {topic}
-                      </span>
+                      <div>
+                        <label className="mb-2 block text-xs font-medium text-slate-400">
+                          Topic
+                        </label>
+
+                        <select
+                          value={topic}
+                          onChange={(event) => setTopic(event.target.value)}
+                          className="w-full rounded-xl border border-white/10 bg-[#090d17] px-4 py-3 text-sm outline-none focus:border-violet-500/50"
+                        >
+                          {topics.map((item) => (
+                            <option key={item} value={item}>
+                              {item}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <SelectField
+                        label="Difficulty"
+                        value={difficulty}
+                        options={["Easy", "Medium", "Hard"]}
+                        onChange={(value) =>
+                          setDifficulty(value as AssessmentDifficulty)
+                        }
+                      />
+
+                      <div>
+                        <label className="mb-2 block text-xs font-medium text-slate-400">
+                          Questions
+                        </label>
+
+                        <select
+                          value={questionCount}
+                          onChange={(event) =>
+                            setQuestionCount(Number(event.target.value))
+                          }
+                          className="w-full rounded-xl border border-white/10 bg-[#090d17] px-4 py-3 text-sm outline-none focus:border-violet-500/50"
+                        >
+                          {questionCounts.map((count) => (
+                            <option key={count} value={count}>
+                              {count} questions
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
-                  ))}
+
+                    <button
+                      type="button"
+                      onClick={handleStart}
+                      disabled={isStarting}
+                      className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold hover:bg-violet-500 disabled:opacity-50"
+                    >
+                      {isStarting ? (
+                        <>
+                          <Loader2 size={17} className="animate-spin" />
+                          Preparing Assessment...
+                        </>
+                      ) : (
+                        <>
+                          <Play size={17} />
+                          Start Assessment
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* INFO */}
+
+                  <div className="rounded-2xl border border-white/[0.08] bg-[#101521] p-6">
+                    <h2 className="font-semibold">How Assessment Works</h2>
+
+                    <div className="mt-6 space-y-5">
+                      <InfoItem
+                        number="01"
+                        title="Choose your skill"
+                        text="Select technology, topic and difficulty."
+                      />
+
+                      <InfoItem
+                        number="02"
+                        title="Answer MCQs"
+                        text="Complete AI-generated technical questions."
+                      />
+
+                      <InfoItem
+                        number="03"
+                        title="Get your score"
+                        text="Your answers are checked automatically."
+                      />
+
+                      <InfoItem
+                        number="04"
+                        title="Find weak areas"
+                        text="See strong topics and areas that need more practice."
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ) : finished ? (
-            /* RESULT */
 
-            <div className="mx-auto max-w-3xl">
-              <div className="rounded-2xl border border-gray-800 bg-[#101722] p-6 text-center md:p-8">
-                <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-purple-500/10">
-                  <Trophy
-                    size={30}
-                    className="text-purple-400"
-                  />
-                </div>
+                {/* HISTORY */}
 
-                <p className="text-sm text-gray-400">
-                  Your Score
-                </p>
+                <div className="mt-8">
+                  <div className="mb-4 flex items-center gap-2">
+                    <History size={17} className="text-slate-500" />
 
-                <h2 className="mt-2 text-5xl font-bold">
-                  {percentage}%
-                </h2>
+                    <h2 className="font-semibold">Assessment History</h2>
+                  </div>
 
-                <p className="mt-3 text-gray-400">
-                  You answered {score} out of{" "}
-                  {questions.length} questions correctly.
-                </p>
+                  {isLoading ? (
+                    <div className="flex justify-center py-12">
+                      <Loader2 className="animate-spin text-violet-300" />
+                    </div>
+                  ) : history.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-white/10 p-10 text-center">
+                      <BrainCircuit className="mx-auto text-slate-600" />
 
-                <div className="mt-6">
-                  {percentage >= 70 ? (
-                    <div className="inline-flex items-center gap-2 rounded-full bg-green-500/10 px-4 py-2 text-sm text-green-400">
-                      <CheckCircle2 size={17} />
-                      Assessment Passed
+                      <p className="mt-3 text-sm text-slate-400">
+                        No assessments yet.
+                      </p>
                     </div>
                   ) : (
-                    <div className="inline-flex items-center gap-2 rounded-full bg-orange-500/10 px-4 py-2 text-sm text-orange-400">
-                      <Target size={17} />
-                      Keep Practicing
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                      {history.map((item) => (
+                        <div
+                          key={item._id}
+                          className="rounded-2xl border border-white/[0.08] bg-[#101521] p-5"
+                        >
+                          <div className="flex justify-between gap-3">
+                            <div>
+                              <p className="font-semibold">{item.technology}</p>
+
+                              <p className="mt-1 text-xs text-slate-500">
+                                {item.topic} • {item.difficulty}
+                              </p>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(item._id)}
+                              disabled={deletingId === item._id}
+                              className="text-slate-600 hover:text-red-300"
+                            >
+                              {deletingId === item._id ? (
+                                <Loader2 size={15} className="animate-spin" />
+                              ) : (
+                                <Trash2 size={15} />
+                              )}
+                            </button>
+                          </div>
+
+                          <div className="mt-5 flex items-end justify-between">
+                            <div>
+                              <p className="text-xs text-slate-500">Score</p>
+
+                              <p className="mt-1 text-2xl font-bold text-violet-300">
+                                {item.status === "completed"
+                                  ? `${item.percentage}%`
+                                  : "--"}
+                              </p>
+                            </div>
+
+                            <span className="rounded-lg border border-white/[0.07] bg-white/[0.03] px-2.5 py-1 text-xs text-slate-400">
+                              {item.status === "completed"
+                                ? item.skillLevel
+                                : "In Progress"}
+                            </span>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleOpenAssessment(item._id)}
+                            className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-violet-500/20 bg-violet-500/10 px-4 py-2.5 text-sm text-violet-300 hover:bg-violet-500/15"
+                          >
+                            {item.status === "completed"
+                              ? "View Result"
+                              : "Continue Assessment"}
+
+                            <ChevronRight size={15} />
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
+              </>
+            )}
 
-                <button
-                  onClick={restartQuiz}
-                  className="mx-auto mt-7 flex items-center gap-2 rounded-xl border border-gray-700 px-5 py-2.5 text-sm hover:bg-gray-800"
-                >
-                  <RotateCcw size={16} />
-                  Retake Assessment
-                </button>
-              </div>
+            {/* =================================================
+                ASSESSMENT
+            ================================================= */}
 
-              {/* ANSWER REVIEW */}
+            {mode === "assessment" && assessment && currentQuestion && (
+              <div className="mx-auto max-w-5xl">
+                {/* PROGRESS */}
 
-              <div className="mt-6 space-y-4">
-                <h2 className="text-lg font-semibold">
-                  Answer Review
-                </h2>
+                <div className="mb-5 rounded-2xl border border-white/[0.08] bg-[#101521] p-5">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-400">
+                      Question {currentIndex + 1} of{" "}
+                      {assessment.questions.length}
+                    </span>
 
-                {questions.map((question, index) => {
-                  const selectedAnswer = answers[index];
+                    <span className="text-violet-300">
+                      {answeredCount} answered
+                    </span>
+                  </div>
 
-                  const correct =
-                    selectedAnswer ===
-                    question.correctAnswer;
-
-                  return (
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/[0.06]">
                     <div
-                      key={question.id}
-                      className="rounded-xl border border-gray-800 bg-[#101722] p-5"
-                    >
-                      <div className="flex items-start gap-3">
-                        {correct ? (
-                          <CheckCircle2
-                            size={20}
-                            className="mt-0.5 shrink-0 text-green-400"
-                          />
-                        ) : (
-                          <XCircle
-                            size={20}
-                            className="mt-0.5 shrink-0 text-red-400"
-                          />
-                        )}
+                      className="h-full rounded-full bg-violet-500 transition-all"
+                      style={{
+                        width: `${progress}%`,
+                      }}
+                    />
+                  </div>
+                </div>
 
-                        <div>
-                          <p className="font-medium">
-                            {question.question}
-                          </p>
+                <div className="grid gap-5 lg:grid-cols-[1fr_260px]">
+                  {/* QUESTION */}
 
-                          <p className="mt-3 text-sm text-gray-400">
-                            Your answer:{" "}
-                            <span
-                              className={
-                                correct
-                                  ? "text-green-400"
-                                  : "text-red-400"
-                              }
-                            >
-                              {selectedAnswer !== undefined
-                                ? question.options[
-                                    selectedAnswer
-                                  ]
-                                : "Not answered"}
-                            </span>
-                          </p>
+                  <div className="rounded-2xl border border-white/[0.08] bg-[#101521] p-6">
+                    <div className="flex flex-wrap gap-2">
+                      <span className="rounded-lg bg-violet-500/10 px-2.5 py-1 text-xs text-violet-300">
+                        {currentQuestion.topic}
+                      </span>
 
-                          {!correct && (
-                            <p className="mt-2 text-sm text-gray-400">
-                              Correct answer:{" "}
-                              <span className="text-green-400">
-                                {
-                                  question.options[
-                                    question.correctAnswer
-                                  ]
-                                }
-                              </span>
-                            </p>
-                          )}
-                        </div>
-                      </div>
+                      <span className="rounded-lg bg-white/[0.04] px-2.5 py-1 text-xs text-slate-400">
+                        {currentQuestion.difficulty}
+                      </span>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-          ) : (
-            /* QUESTION SCREEN */
 
-            <div className="mx-auto max-w-4xl">
-              <div className="mb-5 rounded-xl border border-gray-800 bg-[#101722] p-4">
-                <div className="mb-3 flex justify-between text-sm">
-                  <span className="text-gray-400">
-                    Question {currentQuestion + 1} of{" "}
-                    {questions.length}
-                  </span>
+                    <h2 className="mt-5 text-lg font-semibold leading-8">
+                      {currentQuestion.question}
+                    </h2>
 
-                  <span className="text-purple-400">
-                    {Math.round(
-                      ((currentQuestion + 1) /
-                        questions.length) *
-                        100
-                    )}
-                    %
-                  </span>
-                </div>
+                    <div className="mt-6 space-y-3">
+                      {currentQuestion.options.map((option, index) => {
+                        const selected =
+                          answers[currentQuestion._id] === option;
 
-                <div className="h-2 overflow-hidden rounded-full bg-gray-800">
-                  <div
-                    className="h-full bg-purple-600 transition-all duration-300"
-                    style={{
-                      width: `${
-                        ((currentQuestion + 1) /
-                          questions.length) *
-                        100
-                      }%`,
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-gray-800 bg-[#101722] p-6 md:p-8">
-                <span className="rounded-full bg-purple-500/10 px-3 py-1.5 text-xs text-purple-400">
-                  MERN Stack
-                </span>
-
-                <h2 className="mt-5 text-xl font-semibold leading-8">
-                  {questions[currentQuestion].question}
-                </h2>
-
-                <div className="mt-7 space-y-3">
-                  {questions[currentQuestion].options.map(
-                    (option, index) => {
-                      const selected =
-                        answers[currentQuestion] === index;
-
-                      return (
-                        <button
-                          key={option}
-                          onClick={() =>
-                            selectAnswer(index)
-                          }
-                          className={`flex w-full items-center gap-4 rounded-xl border p-4 text-left transition ${
-                            selected
-                              ? "border-purple-500 bg-purple-500/10 text-purple-200"
-                              : "border-gray-800 bg-[#0b111b] text-gray-300 hover:border-gray-700"
-                          }`}
-                        >
-                          <div
-                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-sm ${
+                        return (
+                          <button
+                            key={`${option}-${index}`}
+                            type="button"
+                            onClick={() =>
+                              handleSelectAnswer(currentQuestion._id, option)
+                            }
+                            className={`flex w-full items-center gap-3 rounded-xl border p-4 text-left text-sm transition ${
                               selected
-                                ? "border-purple-500 bg-purple-600 text-white"
-                                : "border-gray-700"
+                                ? "border-violet-500/50 bg-violet-500/10 text-violet-200"
+                                : "border-white/[0.08] bg-[#090d17] text-slate-300 hover:border-white/15"
                             }`}
                           >
-                            {String.fromCharCode(
-                              65 + index
+                            <span
+                              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-semibold ${
+                                selected
+                                  ? "bg-violet-500 text-white"
+                                  : "bg-white/[0.05] text-slate-500"
+                              }`}
+                            >
+                              {String.fromCharCode(65 + index)}
+                            </span>
+
+                            <span>{option}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* NAVIGATION */}
+
+                    <div className="mt-7 flex items-center justify-between gap-3 border-t border-white/[0.07] pt-5">
+                      <button
+                        type="button"
+                        onClick={handlePrevious}
+                        disabled={currentIndex === 0}
+                        className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-sm text-slate-400 disabled:opacity-30"
+                      >
+                        <ArrowLeft size={16} />
+                        Previous
+                      </button>
+
+                      {currentIndex === assessment.questions.length - 1 ? (
+                        <button
+                          type="button"
+                          onClick={handleSubmit}
+                          disabled={isSubmitting}
+                          className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold hover:bg-emerald-500 disabled:opacity-50"
+                        >
+                          {isSubmitting ? (
+                            <Loader2 size={16} className="animate-spin" />
+                          ) : (
+                            <CheckCircle2 size={16} />
+                          )}
+                          Submit Assessment
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleNext}
+                          className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold hover:bg-violet-500"
+                        >
+                          Next
+                          <ArrowRight size={16} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* QUESTION NAVIGATOR */}
+
+                  <div className="rounded-2xl border border-white/[0.08] bg-[#101521] p-5">
+                    <p className="text-sm font-semibold">Questions</p>
+
+                    <div className="mt-4 grid grid-cols-5 gap-2">
+                      {assessment.questions.map((question, index) => {
+                        const active = index === currentIndex;
+
+                        const answered = Boolean(answers[question._id]);
+
+                        return (
+                          <button
+                            key={question._id}
+                            type="button"
+                            onClick={() => setCurrentIndex(index)}
+                            className={`flex h-9 items-center justify-center rounded-lg border text-xs font-semibold ${
+                              active
+                                ? "border-violet-500 bg-violet-500/15 text-violet-200"
+                                : answered
+                                ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+                                : "border-white/10 bg-white/[0.03] text-slate-500"
+                            }`}
+                          >
+                            {index + 1}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="mt-5 space-y-2 text-xs text-slate-500">
+                      <p>
+                        {answeredCount} / {assessment.questions.length} answered
+                      </p>
+
+                      <p>You can move between questions before submitting.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* =================================================
+                RESULT
+            ================================================= */}
+
+            {mode === "result" && assessment && (
+              <div className="mx-auto max-w-5xl">
+                {/* RESULT HEADER */}
+
+                <div className="rounded-2xl border border-white/[0.08] bg-[#101521] p-7 text-center">
+                  <Trophy size={40} className="mx-auto text-violet-300" />
+
+                  <p className="mt-4 text-sm text-slate-500">
+                    {assessment.technology} Skill Assessment
+                  </p>
+
+                  <p className="mt-3 text-5xl font-bold text-violet-300">
+                    {assessment.percentage}%
+                  </p>
+
+                  <p className="mt-2 text-lg font-semibold">
+                    {assessment.skillLevel}
+                  </p>
+
+                  <p className="mt-2 text-sm text-slate-500">
+                    {assessment.score} correct out of{" "}
+                    {assessment.questions.length}
+                  </p>
+                </div>
+
+                {/* TOPIC PERFORMANCE */}
+
+                {assessment.topicPerformance.length > 0 && (
+                  <div className="mt-5 rounded-2xl border border-white/[0.08] bg-[#101521] p-6">
+                    <h2 className="font-semibold">Topic Performance</h2>
+
+                    <div className="mt-5 space-y-4">
+                      {assessment.topicPerformance.map((item) => (
+                        <div key={item.topic}>
+                          <div className="mb-2 flex justify-between text-sm">
+                            <span className="text-slate-300">{item.topic}</span>
+
+                            <span className="text-slate-500">
+                              {item.correct}/{item.total} • {item.percentage}%
+                            </span>
+                          </div>
+
+                          <div className="h-2 overflow-hidden rounded-full bg-white/[0.06]">
+                            <div
+                              className="h-full rounded-full bg-violet-500"
+                              style={{
+                                width: `${item.percentage}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* STRONG + IMPROVEMENT */}
+
+                <div className="mt-5 grid gap-5 md:grid-cols-2">
+                  <div className="rounded-2xl border border-emerald-500/15 bg-emerald-500/[0.04] p-5">
+                    <h3 className="flex items-center gap-2 font-semibold text-emerald-300">
+                      <CheckCircle2 size={17} />
+                      Strong Areas
+                    </h3>
+
+                    {assessment.strongAreas.length > 0 ? (
+                      <div className="mt-4 space-y-2">
+                        {assessment.strongAreas.map((area) => (
+                          <p key={area} className="text-sm text-slate-300">
+                            ✓ {area}
+                          </p>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-4 text-sm text-slate-500">
+                        Keep practicing to build stronger areas.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="rounded-2xl border border-amber-500/15 bg-amber-500/[0.04] p-5">
+                    <h3 className="flex items-center gap-2 font-semibold text-amber-300">
+                      <Target size={17} />
+                      Needs Improvement
+                    </h3>
+
+                    {assessment.improvementAreas.length > 0 ? (
+                      <div className="mt-4 space-y-2">
+                        {assessment.improvementAreas.map((area) => (
+                          <p key={area} className="text-sm text-slate-300">
+                            • {area}
+                          </p>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-4 text-sm text-slate-500">
+                        Excellent performance across all topics.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* ANSWER REVIEW */}
+
+                <div className="mt-6">
+                  <h2 className="mb-4 font-semibold">Answer Review</h2>
+
+                  <div className="space-y-4">
+                    {assessment.questions.map((question, index) => (
+                      <div
+                        key={question._id}
+                        className="rounded-2xl border border-white/[0.08] bg-[#101521] p-5"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div
+                            className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
+                              question.isCorrect
+                                ? "bg-emerald-500/10 text-emerald-300"
+                                : "bg-red-500/10 text-red-300"
+                            }`}
+                          >
+                            {question.isCorrect ? (
+                              <Check size={15} />
+                            ) : (
+                              <X size={15} />
                             )}
                           </div>
 
-                          <span className="text-sm">
-                            {option}
-                          </span>
-                        </button>
-                      );
-                    }
-                  )}
+                          <div className="flex-1">
+                            <p className="text-xs text-slate-500">
+                              Question {index + 1}
+                            </p>
+
+                            <p className="mt-1 text-sm font-medium leading-6 text-slate-200">
+                              {question.question}
+                            </p>
+
+                            <div className="mt-4 space-y-2 text-sm">
+                              <p className="text-slate-500">
+                                Your answer:{" "}
+                                <span
+                                  className={
+                                    question.isCorrect
+                                      ? "text-emerald-300"
+                                      : "text-red-300"
+                                  }
+                                >
+                                  {question.selectedAnswer || "Not answered"}
+                                </span>
+                              </p>
+
+                              {!question.isCorrect && (
+                                <p className="text-slate-500">
+                                  Correct answer:{" "}
+                                  <span className="text-emerald-300">
+                                    {question.correctAnswer}
+                                  </span>
+                                </p>
+                              )}
+                            </div>
+
+                            {question.explanation && (
+                              <div className="mt-4 rounded-xl border border-violet-500/10 bg-violet-500/[0.04] p-3">
+                                <p className="text-xs font-semibold text-violet-300">
+                                  Explanation
+                                </p>
+
+                                <p className="mt-1 text-sm leading-6 text-slate-400">
+                                  {question.explanation}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
-                <div className="mt-8 flex items-center justify-between border-t border-gray-800 pt-5">
-                  <button
-                    disabled={currentQuestion === 0}
-                    onClick={previousQuestion}
-                    className="flex items-center gap-2 rounded-lg border border-gray-700 px-4 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-30"
-                  >
-                    <ChevronLeft size={16} />
-                    Previous
-                  </button>
-
-                  <button
-                    disabled={
-                      answers[currentQuestion] === undefined
-                    }
-                    onClick={nextQuestion}
-                    className="flex items-center gap-2 rounded-lg bg-purple-600 px-5 py-2.5 text-sm font-medium hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    {currentQuestion ===
-                    questions.length - 1
-                      ? "Finish Assessment"
-                      : "Next Question"}
-
-                    <ChevronRight size={16} />
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleNewAssessment}
+                  className="mt-6 inline-flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold hover:bg-violet-500"
+                >
+                  <RotateCcw size={16} />
+                  Take Another Assessment
+                </button>
               </div>
-            </div>
-          )}
-        </main>
+            )}
+          </main>
+        </div>
       </div>
-    </div>
-</AuthGuard>
+    </AuthGuard>
   );
 }
 
-function InfoCard({
-  icon,
+/* =========================================================
+   SELECT FIELD
+========================================================= */
+
+function SelectField({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+
+  value: string;
+
+  options: string[];
+
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div>
+      <label className="mb-2 block text-xs font-medium text-slate-400">
+        {label}
+      </label>
+
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="w-full rounded-xl border border-white/10 bg-[#090d17] px-4 py-3 text-sm outline-none focus:border-violet-500/50"
+      >
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+/* =========================================================
+   INFO
+========================================================= */
+
+function InfoItem({
+  number,
   title,
   text,
 }: {
-  icon: React.ReactNode;
+  number: string;
+
   title: string;
+
   text: string;
 }) {
   return (
-    <div className="rounded-xl border border-gray-800 bg-[#0b111b] p-4">
-      <div className="mb-3 text-purple-400">
-        {icon}
+    <div className="flex gap-4">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-500/10 text-xs font-bold text-violet-300">
+        {number}
       </div>
 
-      <p className="text-sm font-medium">
-        {title}
-      </p>
+      <div>
+        <p className="text-sm font-medium">{title}</p>
 
-      <p className="mt-1 text-xs text-gray-500">
-        {text}
-      </p>
+        <p className="mt-1 text-xs leading-5 text-slate-500">{text}</p>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   STAT
+========================================================= */
+
+function StatCard({
+  title,
+  value,
+  icon: Icon,
+}: {
+  title: string;
+
+  value: string | number;
+
+  icon: React.ElementType;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/[0.08] bg-[#101521] p-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs text-slate-500">{title}</p>
+
+          <p className="mt-2 text-2xl font-bold">{value}</p>
+        </div>
+
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/10 text-violet-300">
+          <Icon size={19} />
+        </div>
+      </div>
     </div>
   );
 }

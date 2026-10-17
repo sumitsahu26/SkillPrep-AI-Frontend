@@ -1,463 +1,1218 @@
 "use client";
 
-import { useState } from "react";
-import Sidebar from "../components/Sidebar";
-import Topbar from "../components/Topbar";
 import {
-  Map,
-  CheckCircle2,
-  Circle,
-  Lock,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+import {
+  ArrowLeft,
   BookOpen,
-  Code2,
-  Database,
-  Cloud,
-  Server,
-  Trophy,
+  Check,
+  CheckCircle2,
   Clock3,
-  Target,
-  ChevronDown,
-  ChevronUp,
+  Code2,
+  Loader2,
+  Map,
+  Play,
   RotateCcw,
-  Menu,
+  Sparkles,
+  Target,
+  Trash2,
 } from "lucide-react";
 
+import Sidebar from "../components/Sidebar";
+import Topbar from "../components/Topbar";
 import AuthGuard from "../components/AuthGuard";
 
-type RoadmapItem = {
-  id: number;
-  title: string;
-  description: string;
-  duration: string;
-  topics: string[];
-  icon: any;
-};
+import {
+  deleteRoadmap,
+  generateRoadmap,
+  getRoadmap,
+  getRoadmaps,
+  toggleRoadmapTopic,
+  type Roadmap,
+} from "@/services/roadmapApi";
 
-const roadmapData: RoadmapItem[] = [
-  {
-    id: 1,
-    title: "JavaScript Fundamentals",
-    description:
-      "Build strong JavaScript fundamentals required for modern web development.",
-    duration: "1 Week",
-    topics: [
-      "Variables & Scope",
-      "Functions",
-      "Promises",
-      "Async/Await",
-      "Event Loop",
-      "ES6+",
-    ],
-    icon: Code2,
-  },
-  {
-    id: 2,
-    title: "React.js",
-    description:
-      "Learn component-based frontend development and React optimization.",
-    duration: "2 Weeks",
-    topics: [
-      "Components",
-      "Props & State",
-      "Hooks",
-      "Context API",
-      "React Router",
-      "Performance Optimization",
-    ],
-    icon: Code2,
-  },
-  {
-    id: 3,
-    title: "Node.js & Express.js",
-    description:
-      "Build scalable REST APIs and understand backend architecture.",
-    duration: "2 Weeks",
-    topics: [
-      "Node.js Architecture",
-      "Event Loop",
-      "Express",
-      "Middleware",
-      "REST API",
-      "JWT Authentication",
-    ],
-    icon: Server,
-  },
-  {
-    id: 4,
-    title: "MongoDB",
-    description:
-      "Learn database design, aggregation, indexing and query optimization.",
-    duration: "1 Week",
-    topics: [
-      "CRUD",
-      "Schema Design",
-      "Aggregation",
-      "$lookup",
-      "Indexes",
-      "Query Optimization",
-    ],
-    icon: Database,
-  },
-  {
-    id: 5,
-    title: "Advanced Backend",
-    description:
-      "Learn the concepts needed to build production-ready applications.",
-    duration: "2 Weeks",
-    topics: [
-      "Redis",
-      "Caching",
-      "Rate Limiting",
-      "Queues",
-      "Socket.IO",
-      "Microservices Basics",
-    ],
-    icon: Server,
-  },
-  {
-    id: 6,
-    title: "AWS & Deployment",
-    description:
-      "Learn cloud deployment and common AWS services used by developers.",
-    duration: "2 Weeks",
-    topics: ["AWS EC2", "Lambda", "S3", "API Gateway", "Docker", "CI/CD"],
-    icon: Cloud,
-  },
-  {
-    id: 7,
-    title: "System Design",
-    description: "Understand how scalable applications are designed.",
-    duration: "3 Weeks",
-    topics: [
-      "Load Balancing",
-      "Caching",
-      "Database Scaling",
-      "Message Queues",
-      "Horizontal Scaling",
-      "High Availability",
-    ],
-    icon: Target,
-  },
-  {
-    id: 8,
-    title: "Interview Ready",
-    description: "Complete final interview preparation and mock interviews.",
-    duration: "1 Week",
-    topics: [
-      "MERN Revision",
-      "Coding Questions",
-      "System Design",
-      "Mock Interviews",
-      "Resume Review",
-      "HR Questions",
-    ],
-    icon: Trophy,
-  },
+/* =========================================================
+   OPTIONS
+========================================================= */
+
+const roleOptions = [
+  "Full Stack Developer",
+  "Frontend Developer",
+  "Backend Developer",
+  "MERN Stack Developer",
+  "React Developer",
+  "Node.js Developer",
+  "Next.js Developer",
+  "Cloud Developer",
 ];
 
-export default function CareerRoadmapPage() {
-  const [completed, setCompleted] = useState<number[]>([]);
-  const [expanded, setExpanded] = useState<number[]>([1]);
+const experienceOptions = [
+  "Fresher",
+  "0-1 years",
+  "1-3 years",
+  "3-5 years",
+  "5+ years",
+];
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+const durationOptions = [
+  4,
+  6,
+  8,
+  10,
+  12,
+];
 
-  const toggleComplete = (id: number) => {
-    setCompleted((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+/* =========================================================
+   PAGE
+========================================================= */
+
+export default function RoadmapPage() {
+  const [
+    sidebarOpen,
+    setSidebarOpen,
+  ] = useState(false);
+
+  const [
+    targetRole,
+    setTargetRole,
+  ] = useState(
+    "Full Stack Developer"
+  );
+
+  const [
+    experience,
+    setExperience,
+  ] = useState(
+    "3-5 years"
+  );
+
+  const [
+    durationWeeks,
+    setDurationWeeks,
+  ] = useState(8);
+
+  const [
+    skillsText,
+    setSkillsText,
+  ] = useState(
+    "JavaScript, React, Node.js, MongoDB"
+  );
+
+  const [
+    roadmap,
+    setRoadmap,
+  ] =
+    useState<Roadmap | null>(
+      null
     );
-  };
 
-  const toggleExpand = (id: number) => {
-    setExpanded((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+  const [
+    roadmaps,
+    setRoadmaps,
+  ] = useState<Roadmap[]>(
+    []
+  );
+
+  const [
+    isGenerating,
+    setIsGenerating,
+  ] = useState(false);
+
+  const [
+    isLoading,
+    setIsLoading,
+  ] = useState(true);
+
+  const [
+    updatingTopic,
+    setUpdatingTopic,
+  ] =
+    useState<string | null>(
+      null
     );
-  };
 
-  const resetProgress = () => {
-    setCompleted([]);
-  };
+  const [
+    deletingId,
+    setDeletingId,
+  ] =
+    useState<string | null>(
+      null
+    );
 
-  const progress = Math.round((completed.length / roadmapData.length) * 100);
+  const [
+    error,
+    setError,
+  ] = useState("");
+
+  const [
+    message,
+    setMessage,
+  ] = useState("");
+
+  /* =====================================================
+     LOAD ROADMAPS
+  ===================================================== */
+
+  const loadRoadmaps =
+    async () => {
+      try {
+        setIsLoading(true);
+
+        const response =
+          await getRoadmaps();
+
+        setRoadmaps(
+          response.roadmaps ||
+            []
+        );
+      } catch (err) {
+        console.error(
+          err
+        );
+
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to load roadmaps"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+  useEffect(() => {
+    loadRoadmaps();
+  }, []);
+
+  /* =====================================================
+     GENERATE
+  ===================================================== */
+
+  const handleGenerate =
+    async () => {
+      try {
+        setError("");
+        setMessage("");
+
+        const skills =
+          skillsText
+            .split(",")
+            .map(
+              (skill) =>
+                skill.trim()
+            )
+            .filter(Boolean);
+
+        setIsGenerating(
+          true
+        );
+
+        const response =
+          await generateRoadmap(
+            {
+              targetRole,
+              experience,
+              durationWeeks,
+              currentSkills:
+                skills,
+            }
+          );
+
+        setRoadmap(
+          response.roadmap
+        );
+
+        setMessage(
+          "Your roadmap has been generated and saved."
+        );
+
+        await loadRoadmaps();
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to generate roadmap"
+        );
+      } finally {
+        setIsGenerating(
+          false
+        );
+      }
+    };
+
+  /* =====================================================
+     OPEN ROADMAP
+  ===================================================== */
+
+  const handleOpen =
+    async (
+      id: string
+    ) => {
+      try {
+        setError("");
+
+        const response =
+          await getRoadmap(id);
+
+        setRoadmap(
+          response.roadmap
+        );
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to open roadmap"
+        );
+      }
+    };
+
+  /* =====================================================
+     TOGGLE TOPIC
+  ===================================================== */
+
+  const handleToggleTopic =
+    async (
+      topicId: string
+    ) => {
+      if (!roadmap) {
+        return;
+      }
+
+      try {
+        setUpdatingTopic(
+          topicId
+        );
+
+        const response =
+          await toggleRoadmapTopic(
+            roadmap._id,
+            topicId
+          );
+
+        setRoadmap(
+          response.roadmap
+        );
+
+        setRoadmaps(
+          (previous) =>
+            previous.map(
+              (item) =>
+                item._id ===
+                response
+                  .roadmap._id
+                  ? response.roadmap
+                  : item
+            )
+        );
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to update progress"
+        );
+      } finally {
+        setUpdatingTopic(
+          null
+        );
+      }
+    };
+
+  /* =====================================================
+     DELETE
+  ===================================================== */
+
+  const handleDelete =
+    async (
+      id: string
+    ) => {
+      try {
+        setDeletingId(id);
+
+        await deleteRoadmap(
+          id
+        );
+
+        setRoadmaps(
+          (previous) =>
+            previous.filter(
+              (item) =>
+                item._id !== id
+            )
+        );
+
+        if (
+          roadmap?._id === id
+        ) {
+          setRoadmap(null);
+        }
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to delete roadmap"
+        );
+      } finally {
+        setDeletingId(
+          null
+        );
+      }
+    };
+
+  /* =====================================================
+     STATS
+  ===================================================== */
+
+  const completedTopics =
+    useMemo(() => {
+      if (!roadmap) {
+        return 0;
+      }
+
+      return roadmap.steps
+        .flatMap(
+          (step) =>
+            step.topics
+        )
+        .filter(
+          (topic) =>
+            topic.completed
+        ).length;
+    }, [roadmap]);
+
+  const totalTopics =
+    useMemo(() => {
+      if (!roadmap) {
+        return 0;
+      }
+
+      return roadmap.steps.reduce(
+        (
+          total,
+          step
+        ) =>
+          total +
+          step.topics.length,
+        0
+      );
+    }, [roadmap]);
+
+  /* =====================================================
+     UI
+  ===================================================== */
 
   return (
-<AuthGuard>
-<div className="min-h-screen bg-[#080c14] text-white">
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+    <AuthGuard>
+      <div className="min-h-screen bg-[#080b12] text-white">
+        <Sidebar
+          open={
+            sidebarOpen
+          }
+          onClose={() =>
+            setSidebarOpen(
+              false
+            )
+          }
+        />
 
-      <div className="lg:ml-64">
-      <Topbar onMenuClick={() => setSidebarOpen(true)} />
+        <div className="lg:pl-64">
+          <Topbar
+            onMenuClick={() =>
+              setSidebarOpen(
+                true
+              )
+            }
+          />
 
-        <main className="p-4 md:p-6 lg:p-8">
-          {/* Header */}
+          <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
 
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-            <div>
-              <div className="flex items-center gap-2 text-purple-400 mb-2">
-                <Map size={18} />
+            {/* ================= HEADER ================= */}
 
-                <span className="text-sm font-medium">
-                  Personalized Learning Path
-                </span>
+            <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Map
+                    size={21}
+                    className="text-violet-300"
+                  />
+
+                  <h1 className="text-2xl font-bold">
+                    Career Roadmap
+                  </h1>
+                </div>
+
+                <p className="mt-2 text-sm text-slate-500">
+                  Build a personalized learning path and track your progress.
+                </p>
               </div>
 
-              <h1 className="text-3xl font-bold">Career Roadmap</h1>
+              {roadmap && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setRoadmap(
+                      null
+                    )
+                  }
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-sm text-slate-300 hover:bg-white/[0.04]"
+                >
+                  <ArrowLeft
+                    size={16}
+                  />
 
-              <p className="text-gray-400 mt-2">
-                Follow this roadmap to become interview-ready for a Full Stack
-                MERN Developer role.
-              </p>
+                  All Roadmaps
+                </button>
+              )}
             </div>
 
-            <button
-              onClick={resetProgress}
-              className="flex items-center gap-2 border border-gray-700 hover:bg-gray-800 px-4 py-2.5 rounded-lg text-sm w-fit"
-            >
-              <RotateCcw size={16} />
-              Reset Progress
-            </button>
-          </div>
+            {error && (
+              <div className="mb-5 rounded-xl border border-red-500/20 bg-red-500/[0.06] p-4 text-sm text-red-300">
+                {error}
+              </div>
+            )}
 
-          {/* Stats */}
+            {message && (
+              <div className="mb-5 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] p-4 text-sm text-emerald-300">
+                {message}
+              </div>
+            )}
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <StatBox
-              title="Roadmap Progress"
-              value={`${progress}%`}
-              icon={<Target size={20} />}
-            />
+            {!roadmap ? (
+              <>
+                {/* ================= GENERATOR ================= */}
 
-            <StatBox
-              title="Completed"
-              value={`${completed.length}/${roadmapData.length}`}
-              icon={<CheckCircle2 size={20} />}
-            />
+                <div className="grid gap-6 lg:grid-cols-[1.2fr_.8fr]">
+                  <div className="rounded-2xl border border-white/[0.08] bg-[#101521] p-6">
+                    <div className="mb-6">
+                      <div className="flex items-center gap-2">
+                        <Sparkles
+                          size={18}
+                          className="text-violet-300"
+                        />
 
-            <StatBox
-              title="Estimated Time"
-              value="14 Weeks"
-              icon={<Clock3 size={20} />}
-            />
-
-            <StatBox
-              title="Target Role"
-              value="MERN Developer"
-              icon={<Trophy size={20} />}
-            />
-          </div>
-
-          {/* Progress */}
-
-          <div className="bg-[#101722] border border-gray-800 rounded-2xl p-5 mb-8">
-            <div className="flex justify-between text-sm mb-3">
-              <span className="text-gray-400">Overall Progress</span>
-
-              <span className="font-medium">{progress}%</span>
-            </div>
-
-            <div className="w-full h-3 bg-gray-800 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-purple-600 transition-all duration-500"
-                style={{
-                  width: `${progress}%`,
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Roadmap */}
-
-          <div className="max-w-4xl">
-            {roadmapData.map((item, index) => {
-              const Icon = item.icon;
-
-              const isCompleted = completed.includes(item.id);
-
-              const isExpanded = expanded.includes(item.id);
-
-              const isLocked =
-                index > 0 && !completed.includes(roadmapData[index - 1].id);
-
-              return (
-                <div key={item.id} className="relative pl-12 pb-8">
-                  {/* Vertical line */}
-
-                  {index !== roadmapData.length - 1 && (
-                    <div className="absolute left-[19px] top-10 bottom-0 w-[2px] bg-gray-800" />
-                  )}
-
-                  {/* Step Circle */}
-
-                  <div
-                    className={`absolute left-0 top-2 w-10 h-10 rounded-full flex items-center justify-center border z-10 ${
-                      isCompleted
-                        ? "bg-green-500/20 border-green-500 text-green-400"
-                        : isLocked
-                        ? "bg-[#101722] border-gray-800 text-gray-600"
-                        : "bg-purple-500/20 border-purple-500 text-purple-400"
-                    }`}
-                  >
-                    {isCompleted ? (
-                      <CheckCircle2 size={19} />
-                    ) : isLocked ? (
-                      <Lock size={17} />
-                    ) : (
-                      <span className="text-sm font-semibold">{index + 1}</span>
-                    )}
-                  </div>
-
-                  {/* Card */}
-
-                  <div
-                    className={`bg-[#101722] border rounded-2xl overflow-hidden transition ${
-                      isCompleted ? "border-green-500/30" : "border-gray-800"
-                    }`}
-                  >
-                    <div className="p-5">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex gap-4">
-                          <div className="w-11 h-11 bg-[#0b111b] rounded-xl flex items-center justify-center shrink-0">
-                            <Icon
-                              size={20}
-                              className={
-                                isCompleted
-                                  ? "text-green-400"
-                                  : "text-purple-400"
-                              }
-                            />
-                          </div>
-
-                          <div>
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h2 className="font-semibold text-lg">
-                                {item.title}
-                              </h2>
-
-                              {isCompleted && (
-                                <span className="text-xs bg-green-500/10 text-green-400 px-2 py-1 rounded-full">
-                                  Completed
-                                </span>
-                              )}
-
-                              {isLocked && (
-                                <span className="text-xs bg-gray-800 text-gray-500 px-2 py-1 rounded-full">
-                                  Locked
-                                </span>
-                              )}
-                            </div>
-
-                            <p className="text-sm text-gray-400 mt-2 leading-6">
-                              {item.description}
-                            </p>
-
-                            <div className="flex items-center gap-2 text-xs text-gray-500 mt-3">
-                              <Clock3 size={14} />
-                              {item.duration}
-                            </div>
-                          </div>
-                        </div>
-
-                        <button
-                          onClick={() => toggleExpand(item.id)}
-                          className="text-gray-500 hover:text-white"
-                        >
-                          {isExpanded ? (
-                            <ChevronUp size={20} />
-                          ) : (
-                            <ChevronDown size={20} />
-                          )}
-                        </button>
+                        <h2 className="font-semibold">
+                          Generate AI Roadmap
+                        </h2>
                       </div>
 
-                      {/* Topics */}
+                      <p className="mt-1 text-sm text-slate-500">
+                        Tell us your goal and current skills.
+                      </p>
+                    </div>
 
-                      {isExpanded && (
-                        <div className="mt-5 pt-5 border-t border-gray-800">
-                          <div className="flex items-center gap-2 mb-4">
-                            <BookOpen size={16} className="text-purple-400" />
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      <SelectField
+                        label="Target Role"
+                        value={
+                          targetRole
+                        }
+                        options={
+                          roleOptions
+                        }
+                        onChange={
+                          setTargetRole
+                        }
+                      />
 
-                            <p className="text-sm font-medium">
-                              Topics to Learn
-                            </p>
-                          </div>
+                      <SelectField
+                        label="Experience"
+                        value={
+                          experience
+                        }
+                        options={
+                          experienceOptions
+                        }
+                        onChange={
+                          setExperience
+                        }
+                      />
 
-                          <div className="grid sm:grid-cols-2 gap-3">
-                            {item.topics.map((topic) => (
-                              <div
-                                key={topic}
-                                className="flex items-center gap-2 bg-[#0b111b] border border-gray-800 rounded-lg p-3"
+                      <div>
+                        <label className="mb-2 block text-xs font-medium text-slate-400">
+                          Duration
+                        </label>
+
+                        <select
+                          value={
+                            durationWeeks
+                          }
+                          onChange={(
+                            event
+                          ) =>
+                            setDurationWeeks(
+                              Number(
+                                event
+                                  .target
+                                  .value
+                              )
+                            )
+                          }
+                          className="w-full rounded-xl border border-white/10 bg-[#090d17] px-4 py-3 text-sm outline-none focus:border-violet-500/50"
+                        >
+                          {durationOptions.map(
+                            (
+                              weeks
+                            ) => (
+                              <option
+                                key={
+                                  weeks
+                                }
+                                value={
+                                  weeks
+                                }
                               >
-                                <Circle size={12} className="text-gray-500" />
+                                {
+                                  weeks
+                                }{" "}
+                                weeks
+                              </option>
+                            )
+                          )}
+                        </select>
+                      </div>
 
-                                <span className="text-sm text-gray-400">
-                                  {topic}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
+                      <div className="sm:col-span-2">
+                        <label className="mb-2 block text-xs font-medium text-slate-400">
+                          Current Skills
+                        </label>
 
-                          <div className="mt-5">
-                            <button
-                              disabled={isLocked}
-                              onClick={() => toggleComplete(item.id)}
-                              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition ${
-                                isLocked
-                                  ? "bg-gray-800 text-gray-600 cursor-not-allowed"
-                                  : isCompleted
-                                  ? "border border-green-500/30 text-green-400 hover:bg-green-500/10"
-                                  : "bg-purple-600 hover:bg-purple-700"
-                              }`}
-                            >
-                              {isLocked ? (
-                                <>
-                                  <Lock size={16} />
-                                  Complete Previous Step
-                                </>
-                              ) : isCompleted ? (
-                                <>
-                                  <CheckCircle2 size={16} />
-                                  Mark as Incomplete
-                                </>
-                              ) : (
-                                <>
-                                  <CheckCircle2 size={16} />
-                                  Mark as Complete
-                                </>
-                              )}
-                            </button>
-                          </div>
-                        </div>
+                        <input
+                          value={
+                            skillsText
+                          }
+                          onChange={(
+                            event
+                          ) =>
+                            setSkillsText(
+                              event
+                                .target
+                                .value
+                            )
+                          }
+                          placeholder="React, Node.js, MongoDB..."
+                          className="w-full rounded-xl border border-white/10 bg-[#090d17] px-4 py-3 text-sm outline-none placeholder:text-slate-600 focus:border-violet-500/50"
+                        />
+
+                        <p className="mt-2 text-xs text-slate-600">
+                          Separate skills with commas.
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={
+                        handleGenerate
+                      }
+                      disabled={
+                        isGenerating
+                      }
+                      className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold transition hover:bg-violet-500 disabled:opacity-50"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2
+                            size={
+                              17
+                            }
+                            className="animate-spin"
+                          />
+
+                          Creating your roadmap...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles
+                            size={
+                              17
+                            }
+                          />
+
+                          Generate Roadmap
+                        </>
                       )}
+                    </button>
+                  </div>
+
+                  {/* HOW IT WORKS */}
+
+                  <div className="rounded-2xl border border-white/[0.08] bg-[#101521] p-6">
+                    <h2 className="font-semibold">
+                      Your Learning Journey
+                    </h2>
+
+                    <div className="mt-6 space-y-5">
+                      <FlowItem
+                        number="01"
+                        title="Set your goal"
+                        text="Choose the role you want to prepare for."
+                      />
+
+                      <FlowItem
+                        number="02"
+                        title="AI creates your path"
+                        text="A structured weekly plan is generated from your experience and skills."
+                      />
+
+                      <FlowItem
+                        number="03"
+                        title="Complete topics"
+                        text="Mark individual topics complete as you learn."
+                      />
+
+                      <FlowItem
+                        number="04"
+                        title="Track progress"
+                        text="Your roadmap automatically tracks your completion percentage."
+                      />
                     </div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </main>
+
+                {/* ================= SAVED ================= */}
+
+                <div className="mt-8">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h2 className="font-semibold">
+                      My Roadmaps
+                    </h2>
+
+                    <span className="text-xs text-slate-500">
+                      {
+                        roadmaps.length
+                      }{" "}
+                      saved
+                    </span>
+                  </div>
+
+                  {isLoading ? (
+                    <div className="flex justify-center py-12">
+                      <Loader2 className="animate-spin text-violet-300" />
+                    </div>
+                  ) : roadmaps.length ===
+                    0 ? (
+                    <div className="rounded-2xl border border-dashed border-white/10 p-10 text-center">
+                      <Map
+                        className="mx-auto text-slate-600"
+                      />
+
+                      <p className="mt-3 text-sm text-slate-400">
+                        No roadmaps yet.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                      {roadmaps.map(
+                        (
+                          item
+                        ) => (
+                          <div
+                            key={
+                              item._id
+                            }
+                            className="rounded-2xl border border-white/[0.08] bg-[#101521] p-5"
+                          >
+                            <div className="flex justify-between gap-3">
+                              <div>
+                                <p className="font-semibold">
+                                  {
+                                    item.title
+                                  }
+                                </p>
+
+                                <p className="mt-1 text-xs text-slate-500">
+                                  {
+                                    item.targetRole
+                                  }
+                                </p>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleDelete(
+                                    item._id
+                                  )
+                                }
+                                disabled={
+                                  deletingId ===
+                                  item._id
+                                }
+                                className="text-slate-600 hover:text-red-300"
+                              >
+                                {deletingId ===
+                                item._id ? (
+                                  <Loader2
+                                    size={
+                                      16
+                                    }
+                                    className="animate-spin"
+                                  />
+                                ) : (
+                                  <Trash2
+                                    size={
+                                      16
+                                    }
+                                  />
+                                )}
+                              </button>
+                            </div>
+
+                            <div className="mt-5">
+                              <div className="mb-2 flex justify-between text-xs">
+                                <span className="text-slate-500">
+                                  Progress
+                                </span>
+
+                                <span className="text-violet-300">
+                                  {
+                                    item.progress
+                                  }
+                                  %
+                                </span>
+                              </div>
+
+                              <div className="h-2 overflow-hidden rounded-full bg-white/[0.06]">
+                                <div
+                                  className="h-full rounded-full bg-violet-500"
+                                  style={{
+                                    width: `${item.progress}%`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+
+                            <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
+                              <span className="flex items-center gap-1">
+                                <Clock3
+                                  size={
+                                    13
+                                  }
+                                />
+
+                                {
+                                  item.durationWeeks
+                                }{" "}
+                                weeks
+                              </span>
+
+                              <span>
+                                {
+                                  item.status
+                                }
+                              </span>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleOpen(
+                                  item._id
+                                )
+                              }
+                              className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-violet-500/20 bg-violet-500/10 px-4 py-2.5 text-sm text-violet-300 hover:bg-violet-500/15"
+                            >
+                              <Play
+                                size={
+                                  15
+                                }
+                              />
+
+                              Continue Roadmap
+                            </button>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              /* ================= ROADMAP DETAILS ================= */
+
+              <div>
+                <div className="rounded-2xl border border-white/[0.08] bg-[#101521] p-6">
+                  <div className="flex flex-col justify-between gap-5 md:flex-row">
+                    <div>
+                      <span className="text-xs font-semibold uppercase tracking-wider text-violet-300">
+                        AI Learning Roadmap
+                      </span>
+
+                      <h2 className="mt-2 text-2xl font-bold">
+                        {
+                          roadmap.title
+                        }
+                      </h2>
+
+                      <p className="mt-2 text-sm text-slate-500">
+                        {
+                          roadmap.targetRole
+                        }{" "}
+                        •{" "}
+                        {
+                          roadmap.experience
+                        }{" "}
+                        •{" "}
+                        {
+                          roadmap.durationWeeks
+                        }{" "}
+                        weeks
+                      </p>
+                    </div>
+
+                    <div className="min-w-[180px]">
+                      <p className="text-right text-3xl font-bold text-violet-300">
+                        {
+                          roadmap.progress
+                        }
+                        %
+                      </p>
+
+                      <p className="mt-1 text-right text-xs text-slate-500">
+                        {
+                          completedTopics
+                        }{" "}
+                        /{" "}
+                        {
+                          totalTopics
+                        }{" "}
+                        topics
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 h-2.5 overflow-hidden rounded-full bg-white/[0.06]">
+                    <div
+                      className="h-full rounded-full bg-violet-500 transition-all"
+                      style={{
+                        width: `${roadmap.progress}%`,
+                      }}
+                    />
+                  </div>
+
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {roadmap.targetSkills.map(
+                      (
+                        skill
+                      ) => (
+                        <span
+                          key={
+                            skill
+                          }
+                          className="rounded-lg border border-white/[0.07] bg-white/[0.03] px-3 py-1.5 text-xs text-slate-400"
+                        >
+                          {
+                            skill
+                          }
+                        </span>
+                      )
+                    )}
+                  </div>
+                </div>
+
+                {/* STEPS */}
+
+                <div className="mt-6 space-y-5">
+                  {roadmap.steps.map(
+                    (
+                      step
+                    ) => (
+                      <div
+                        key={
+                          step._id
+                        }
+                        className="rounded-2xl border border-white/[0.08] bg-[#101521] p-6"
+                      >
+                        <div className="flex gap-4">
+                          <div
+                            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+                              step.completed
+                                ? "bg-emerald-500/10 text-emerald-300"
+                                : "bg-violet-500/10 text-violet-300"
+                            }`}
+                          >
+                            {step.completed ? (
+                              <CheckCircle2
+                                size={
+                                  20
+                                }
+                              />
+                            ) : (
+                              <span className="text-sm font-bold">
+                                {
+                                  step.week
+                                }
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex-1">
+                            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+                              Week{" "}
+                              {
+                                step.week
+                              }
+                            </p>
+
+                            <h3 className="mt-1 text-lg font-semibold">
+                              {
+                                step.title
+                              }
+                            </h3>
+
+                            <p className="mt-2 text-sm leading-6 text-slate-500">
+                              {
+                                step.description
+                              }
+                            </p>
+
+                            {/* TOPICS */}
+
+                            <div className="mt-5 space-y-2">
+                              {step.topics.map(
+                                (
+                                  topic
+                                ) => (
+                                  <button
+                                    key={
+                                      topic._id
+                                    }
+                                    type="button"
+                                    onClick={() =>
+                                      handleToggleTopic(
+                                        topic._id
+                                      )
+                                    }
+                                    disabled={
+                                      updatingTopic ===
+                                      topic._id
+                                    }
+                                    className="flex w-full items-start gap-3 rounded-xl border border-white/[0.07] bg-[#090d17] p-3 text-left transition hover:border-violet-500/20"
+                                  >
+                                    <div
+                                      className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${
+                                        topic.completed
+                                          ? "border-emerald-500 bg-emerald-500 text-white"
+                                          : "border-white/15"
+                                      }`}
+                                    >
+                                      {updatingTopic ===
+                                      topic._id ? (
+                                        <Loader2
+                                          size={
+                                            12
+                                          }
+                                          className="animate-spin"
+                                        />
+                                      ) : topic.completed ? (
+                                        <Check
+                                          size={
+                                            12
+                                          }
+                                        />
+                                      ) : null}
+                                    </div>
+
+                                    <div>
+                                      <p
+                                        className={`text-sm font-medium ${
+                                          topic.completed
+                                            ? "text-slate-500 line-through"
+                                            : "text-slate-200"
+                                        }`}
+                                      >
+                                        {
+                                          topic.title
+                                        }
+                                      </p>
+
+                                      <p className="mt-1 text-xs leading-5 text-slate-600">
+                                        {
+                                          topic.description
+                                        }
+                                      </p>
+                                    </div>
+                                  </button>
+                                )
+                              )}
+                            </div>
+
+                            {/* RESOURCES */}
+
+                            {step.resources.length >
+                              0 && (
+                              <div className="mt-5">
+                                <p className="mb-2 flex items-center gap-2 text-xs font-medium text-slate-500">
+                                  <BookOpen
+                                    size={
+                                      14
+                                    }
+                                  />
+
+                                  Resources & Practice
+                                </p>
+
+                                <div className="flex flex-wrap gap-2">
+                                  {step.resources.map(
+                                    (
+                                      resource,
+                                      index
+                                    ) => (
+                                      <span
+                                        key={`${resource.title}-${index}`}
+                                        className="inline-flex items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.03] px-3 py-2 text-xs text-slate-400"
+                                      >
+                                        <Code2
+                                          size={
+                                            13
+                                          }
+                                        />
+
+                                        {
+                                          resource.title
+                                        }
+                                      </span>
+                                    )
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+
+                {roadmap.progress ===
+                  100 && (
+                  <div className="mt-6 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.06] p-6 text-center">
+                    <CheckCircle2
+                      size={34}
+                      className="mx-auto text-emerald-300"
+                    />
+
+                    <h3 className="mt-3 text-lg font-semibold">
+                      Roadmap Completed!
+                    </h3>
+
+                    <p className="mt-1 text-sm text-slate-400">
+                      You completed all{" "}
+                      {
+                        totalTopics
+                      }{" "}
+                      topics.
+                    </p>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setRoadmap(
+                      null
+                    )
+                  }
+                  className="mt-6 inline-flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-sm text-slate-400 hover:bg-white/[0.04]"
+                >
+                  <RotateCcw
+                    size={15}
+                  />
+
+                  Back to My Roadmaps
+                </button>
+              </div>
+            )}
+          </main>
+        </div>
       </div>
-    </div>
-</AuthGuard>
+    </AuthGuard>
   );
 }
 
-function StatBox({
-  title,
+/* =========================================================
+   SMALL COMPONENTS
+========================================================= */
+
+function SelectField({
+  label,
   value,
-  icon,
+  options,
+  onChange,
 }: {
-  title: string;
+  label: string;
   value: string;
-  icon: React.ReactNode;
+  options: string[];
+  onChange: (
+    value: string
+  ) => void;
 }) {
   return (
-    <div className="bg-[#101722] border border-gray-800 rounded-xl p-5">
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-gray-400">{title}</p>
+    <div>
+      <label className="mb-2 block text-xs font-medium text-slate-400">
+        {label}
+      </label>
 
-        <div className="text-purple-400">{icon}</div>
+      <select
+        value={value}
+        onChange={(
+          event
+        ) =>
+          onChange(
+            event.target
+              .value
+          )
+        }
+        className="w-full rounded-xl border border-white/10 bg-[#090d17] px-4 py-3 text-sm outline-none focus:border-violet-500/50"
+      >
+        {options.map(
+          (option) => (
+            <option
+              key={
+                option
+              }
+              value={
+                option
+              }
+            >
+              {
+                option
+              }
+            </option>
+          )
+        )}
+      </select>
+    </div>
+  );
+}
+
+function FlowItem({
+  number,
+  title,
+  text,
+}: {
+  number: string;
+  title: string;
+  text: string;
+}) {
+  return (
+    <div className="flex gap-4">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-500/10 text-xs font-bold text-violet-300">
+        {number}
       </div>
 
-      <p className="text-xl font-semibold">{value}</p>
+      <div>
+        <p className="text-sm font-medium">
+          {title}
+        </p>
+
+        <p className="mt-1 text-xs leading-5 text-slate-500">
+          {text}
+        </p>
+      </div>
     </div>
   );
 }

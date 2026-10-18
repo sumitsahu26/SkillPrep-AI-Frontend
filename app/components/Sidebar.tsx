@@ -141,7 +141,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               await logout();
               onClose();
             }}
-            className="mt-2 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-red-400 transition hover:bg-red-500/10 hover:text-red-300"
+            className="mt-2 flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-red-400 transition hover:bg-red-500/10 hover:text-red-300"
           >
             <LogOut size={18} />
             Logout

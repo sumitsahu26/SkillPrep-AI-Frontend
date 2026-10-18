@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -223,7 +223,7 @@ const convertToBackendResume = (resume: Resume) => {
   };
 };
 
-export default function ResumeBuilderPage() {
+export function ResumeBuilderContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [step, setStep] = useState(0);
   const [resume, setResume] = useState<Resume>(initialResume);
@@ -1227,5 +1227,27 @@ export default function ResumeBuilderPage() {
         </div>
       </div>
     </AuthGuard>
+  );
+}
+
+function ResumeBuilderLoading() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-[#08090d] text-white">
+      <div className="text-center">
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-zinc-700 border-t-violet-500" />
+
+        <p className="mt-4 text-sm text-zinc-500">
+          Loading resume builder...
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export default function ResumeBuilderPage() {
+  return (
+    <Suspense fallback={<ResumeBuilderLoading />}>
+      <ResumeBuilderContent />
+    </Suspense>
   );
 }

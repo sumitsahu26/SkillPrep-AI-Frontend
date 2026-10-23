@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+import GoogleAuthProvider from "../app/components/GoogleAuthProvider";
+
 export const metadata: Metadata = {
   title: "SkillPrep AI | Build Your Career",
   description:
@@ -14,7 +16,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <GoogleAuthProvider>
+          {children}
+        </GoogleAuthProvider>
+      </body>
     </html>
   );
 }

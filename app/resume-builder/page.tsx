@@ -122,7 +122,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-xs font-medium text-zinc-400">
+      <span className="mb-2 block text-xs font-medium text-zinc-600 dark:text-zinc-400">
         {label}
       </span>
       <input
@@ -130,7 +130,7 @@ function Field({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-white/10 bg-[#0b0c11] px-3.5 py-3 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-violet-400/60 focus:ring-2 focus:ring-violet-500/10"
+        className="w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-violet-400/60 focus:ring-2 focus:ring-violet-500/10 dark:border-white/10 dark:bg-[#0b0c11] dark:text-zinc-100 dark:placeholder:text-zinc-600"
       />
     </label>
   );
@@ -151,7 +151,7 @@ function TextField({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-xs font-medium text-zinc-400">
+      <span className="mb-2 block text-xs font-medium text-zinc-600 dark:text-zinc-400">
         {label}
       </span>
       <textarea
@@ -159,7 +159,7 @@ function TextField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full resize-y rounded-xl border border-white/10 bg-[#0b0c11] px-3.5 py-3 text-sm leading-6 text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-violet-400/60 focus:ring-2 focus:ring-violet-500/10"
+        className="w-full resize-y rounded-xl border border-zinc-200 bg-white px-3.5 py-3 text-sm leading-6 text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-violet-400/60 focus:ring-2 focus:ring-violet-500/10 dark:border-white/10 dark:bg-[#0b0c11] dark:text-zinc-100 dark:placeholder:text-zinc-600"
       />
     </label>
   );
@@ -323,7 +323,7 @@ export function ResumeBuilderContent() {
       ...prev,
       [key]: value,
     }));
-  
+
     setSaved(false);
   };
 
@@ -497,12 +497,12 @@ export function ResumeBuilderContent() {
 
   const exportPDF = async () => {
     if (!resumePreviewRef.current) return;
-  
+
     try {
       const html2pdf = (await import("html2pdf.js")).default;
-  
+
       const element = resumePreviewRef.current;
-  
+
       const options: any = {
         margin: 0,
         filename: `${resume.fullName || "resume"}-resume.pdf`,
@@ -525,16 +525,16 @@ export function ResumeBuilderContent() {
           mode: ["css", "legacy"],
         },
       };
-  
+
       const pdfBlob = await html2pdf()
         .set(options)
         .from(element)
         .outputPdf("blob");
-  
+
       const pdfUrl = URL.createObjectURL(pdfBlob);
-  
+
       window.open(pdfUrl, "_blank");
-  
+
       // Release memory later
       setTimeout(() => {
         URL.revokeObjectURL(pdfUrl);
@@ -546,7 +546,7 @@ export function ResumeBuilderContent() {
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-[#08090d] text-zinc-100">
+      <div className="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-[#08090d] dark:text-zinc-100">
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <div className="min-h-screen lg:pl-64">
           <Topbar onMenuClick={() => setSidebarOpen(true)} />
@@ -555,19 +555,19 @@ export function ResumeBuilderContent() {
               <div>
                 <Link
                   href="/dashboard"
-                  className="mb-4 inline-flex items-center gap-2 text-xs text-zinc-500 hover:text-zinc-200"
+                  className="mb-4 inline-flex items-center gap-2 text-xs text-zinc-500 transition hover:text-zinc-900 dark:hover:text-zinc-200"
                 >
                   <ArrowLeft size={14} /> Back to dashboard
                 </Link>
                 <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-500/10 text-violet-300">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-100 text-violet-600 dark:bg-violet-500/10 dark:text-violet-300">
                     <FileText size={22} />
                   </div>
                   <div>
-                    <h1 className="text-2xl font-bold sm:text-3xl">
+                    <h1 className="text-2xl font-bold text-zinc-900 dark:text-white sm:text-3xl">
                       Resume Builder
                     </h1>
-                    <p className="mt-1 text-sm text-zinc-500">
+                    <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-500">
                       Create your professional resume with a live preview.
                     </p>
                   </div>
@@ -576,7 +576,7 @@ export function ResumeBuilderContent() {
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setShowPreview((v) => !v)}
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-sm text-zinc-300 hover:bg-white/5"
+                  className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-700 transition hover:bg-zinc-100 dark:border-white/10 dark:bg-transparent dark:text-zinc-300 dark:hover:bg-white/5"
                 >
                   <Eye size={16} />{" "}
                   {showPreview ? "Hide preview" : "Show preview"}
@@ -584,7 +584,7 @@ export function ResumeBuilderContent() {
                 <button
                   onClick={saveDraft}
                   disabled={isSaving}
-                  className="inline-flex items-center gap-2 rounded-xl border border-violet-400/20 bg-violet-500/10 px-4 py-2.5 text-sm font-medium text-violet-200 hover:bg-violet-500/15 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-medium text-violet-700 transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-violet-400/20 dark:bg-violet-500/10 dark:text-violet-200 dark:hover:bg-violet-500/15"
                 >
                   {saved ? <Check size={16} /> : <Sparkles size={16} />}
 
@@ -599,10 +599,10 @@ export function ResumeBuilderContent() {
               </div>
             </div>
             {error && (
-  <div className="mb-5 rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-    {error}
-  </div>
-)}
+              <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-400/20 dark:bg-red-500/10 dark:text-red-300">
+                {error}
+              </div>
+            )}
 
             <div
               className={`grid items-start gap-6 ${
@@ -611,7 +611,7 @@ export function ResumeBuilderContent() {
                   : "grid-cols-1"
               }`}
             >
-              <section className="min-w-0 rounded-2xl border border-white/[0.08] bg-[#101117] p-4 sm:p-6">
+              <section className="min-w-0 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/[0.08] dark:bg-[#101117] dark:shadow-none sm:p-6">
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {steps.map((item, index) => {
                     const Icon = item.icon;
@@ -621,8 +621,8 @@ export function ResumeBuilderContent() {
                         onClick={() => setStep(index)}
                         className={`flex items-center gap-2 rounded-xl border p-3 text-left transition ${
                           step === index
-                            ? "border-violet-400/30 bg-violet-500/10 text-violet-200"
-                            : "border-white/[0.07] text-zinc-500 hover:bg-white/[0.03]"
+                            ? "border-violet-300 bg-violet-50 text-violet-700 dark:border-violet-400/30 dark:bg-violet-500/10 dark:text-violet-200"
+                            : "border-zinc-200 text-zinc-600 hover:bg-zinc-100 dark:border-white/[0.07] dark:text-zinc-500 dark:hover:bg-white/[0.03]"
                         }`}
                       >
                         <Icon size={17} />
@@ -636,18 +636,18 @@ export function ResumeBuilderContent() {
 
                 <div className="mt-7 flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-violet-400">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-violet-600 dark:text-violet-400">
                       Step {step + 1} of {steps.length}
                     </p>
-                    <h2 className="mt-2 text-xl font-semibold">
+                    <h2 className="mt-2 text-xl font-semibold text-zinc-900 dark:text-white">
                       {steps[step].label}
                     </h2>
                   </div>
-                  <span className="text-xs text-zinc-500">
+                  <span className="text-xs text-zinc-500 dark:text-zinc-500">
                     {Math.round(((step + 1) / steps.length) * 100)}% complete
                   </span>
                 </div>
-                <div className="mt-4 h-1 overflow-hidden rounded-full bg-white/[0.07]">
+                <div className="mt-4 h-1 overflow-hidden rounded-full bg-zinc-200 dark:bg-white/[0.07]">
                   <div
                     className="h-full rounded-full bg-violet-500 transition-all"
                     style={{ width: `${((step + 1) / steps.length) * 100}%` }}
@@ -715,17 +715,17 @@ export function ResumeBuilderContent() {
 
                   {step === 1 && (
                     <>
-                      <p className="text-sm leading-6 text-zinc-500">
+                      <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-500">
                         Add your work experience, starting with your most recent
                         role. Use clear, accurate descriptions of your work.
                       </p>
                       {resume.experience.map((entry, index) => (
                         <div
                           key={entry.id}
-                          className="rounded-xl border border-white/[0.08] p-4"
+                          className="rounded-xl border border-zinc-200 bg-zinc-50/50 p-4 dark:border-white/[0.08] dark:bg-transparent"
                         >
                           <div className="mb-4 flex items-center justify-between">
-                            <h3 className="text-sm font-semibold">
+                            <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">
                               Experience {index + 1}
                             </h3>
                             <button
@@ -733,7 +733,7 @@ export function ResumeBuilderContent() {
                                 removeEntry("experience", entry.id)
                               }
                               aria-label="Remove experience"
-                              className="rounded-lg p-2 text-zinc-500 hover:bg-red-500/10 hover:text-red-300"
+                              className="rounded-lg p-2 text-zinc-500 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-300"
                             >
                               <Trash2 size={16} />
                             </button>
@@ -798,7 +798,7 @@ export function ResumeBuilderContent() {
                       ))}
                       <button
                         onClick={() => addEntry("experience")}
-                        className="inline-flex items-center gap-2 rounded-xl border border-dashed border-white/15 px-4 py-3 text-sm text-zinc-300 hover:border-violet-400/40 hover:text-violet-200"
+                        className="inline-flex items-center gap-2 rounded-xl border border-dashed border-zinc-300 px-4 py-3 text-sm text-zinc-700 transition hover:border-violet-400/40 hover:text-violet-600 dark:border-white/15 dark:text-zinc-300 dark:hover:text-violet-200"
                       >
                         <Plus size={16} /> Add experience
                       </button>
@@ -810,16 +810,16 @@ export function ResumeBuilderContent() {
                       {resume.education.map((entry, index) => (
                         <div
                           key={entry.id}
-                          className="rounded-xl border border-white/[0.08] p-4"
+                          className="rounded-xl border border-zinc-200 bg-zinc-50/50 p-4 dark:border-white/[0.08] dark:bg-transparent"
                         >
                           <div className="mb-4 flex items-center justify-between">
-                            <h3 className="text-sm font-semibold">
+                            <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">
                               Education {index + 1}
                             </h3>
                             <button
                               onClick={() => removeEntry("education", entry.id)}
                               aria-label="Remove education"
-                              className="rounded-lg p-2 text-zinc-500 hover:bg-red-500/10 hover:text-red-300"
+                              className="rounded-lg p-2 text-zinc-500 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-300"
                             >
                               <Trash2 size={16} />
                             </button>
@@ -883,7 +883,7 @@ export function ResumeBuilderContent() {
                       ))}
                       <button
                         onClick={() => addEntry("education")}
-                        className="inline-flex items-center gap-2 rounded-xl border border-dashed border-white/15 px-4 py-3 text-sm text-zinc-300 hover:border-violet-400/40 hover:text-violet-200"
+                        className="inline-flex items-center gap-2 rounded-xl border border-dashed border-zinc-300 px-4 py-3 text-sm text-zinc-700 transition hover:border-violet-400/40 hover:text-violet-600 dark:border-white/15 dark:text-zinc-300 dark:hover:text-violet-200"
                       >
                         <Plus size={16} /> Add education
                       </button>
@@ -899,29 +899,31 @@ export function ResumeBuilderContent() {
                         placeholder="JavaScript, TypeScript, React, Next.js, Node.js, Express, MongoDB, Git"
                         rows={3}
                       />
-                      <p className="-mt-2 text-xs text-zinc-500">
+                      <p className="-mt-2 text-xs text-zinc-600 dark:text-zinc-500">
                         Separate skills with commas. Each skill appears as a tag
                         in your resume preview.
                       </p>
                       <div className="mt-6 flex items-center justify-between">
-                        <h3 className="text-base font-semibold">Projects</h3>
-                        <span className="text-xs text-zinc-500">
+                        <h3 className="text-base font-semibold text-zinc-900 dark:text-white">
+                          Projects
+                        </h3>
+                        <span className="text-xs text-zinc-500 dark:text-zinc-500">
                           Highlight your best work
                         </span>
                       </div>
                       {resume.projects.map((entry, index) => (
                         <div
                           key={entry.id}
-                          className="rounded-xl border border-white/[0.08] p-4"
+                          className="rounded-xl border border-zinc-200 bg-zinc-50/50 p-4 dark:border-white/[0.08] dark:bg-transparent"
                         >
                           <div className="mb-4 flex items-center justify-between">
-                            <h3 className="text-sm font-semibold">
+                            <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">
                               Project {index + 1}
                             </h3>
                             <button
                               onClick={() => removeEntry("projects", entry.id)}
                               aria-label="Remove project"
-                              className="rounded-lg p-2 text-zinc-500 hover:bg-red-500/10 hover:text-red-300"
+                              className="rounded-lg p-2 text-zinc-500 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-300"
                             >
                               <Trash2 size={16} />
                             </button>
@@ -969,7 +971,7 @@ export function ResumeBuilderContent() {
                       ))}
                       <button
                         onClick={() => addEntry("projects")}
-                        className="inline-flex items-center gap-2 rounded-xl border border-dashed border-white/15 px-4 py-3 text-sm text-zinc-300 hover:border-violet-400/40 hover:text-violet-200"
+                        className="inline-flex items-center gap-2 rounded-xl border border-dashed border-zinc-300 px-4 py-3 text-sm text-zinc-700 transition hover:border-violet-400/40 hover:text-violet-600 dark:border-white/15 dark:text-zinc-300 dark:hover:text-violet-200"
                       >
                         <Plus size={16} /> Add project
                       </button>
@@ -977,11 +979,11 @@ export function ResumeBuilderContent() {
                   )}
                 </div>
 
-                <div className="mt-8 flex items-center justify-between border-t border-white/[0.08] pt-5">
+                <div className="mt-8 flex items-center justify-between border-t border-zinc-200 pt-5 dark:border-white/[0.08]">
                   <button
                     disabled={step === 0}
                     onClick={() => setStep((s) => Math.max(0, s - 1))}
-                    className="rounded-xl border border-white/10 px-4 py-2.5 text-sm text-zinc-300 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-30"
+                    className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-30 dark:border-white/10 dark:bg-transparent dark:text-zinc-300 dark:hover:bg-white/5"
                   >
                     Previous
                   </button>
@@ -1012,8 +1014,10 @@ export function ResumeBuilderContent() {
                 <section className="min-w-0 xl:sticky xl:top-24">
                   <div className="mb-3 flex items-center justify-between">
                     <div>
-                      <h2 className="font-semibold">Live preview</h2>
-                      <p className="mt-1 text-xs text-[#71717a]">
+                      <h2 className="font-semibold text-zinc-900 dark:text-white">
+                        Live preview
+                      </h2>
+                      <p className="mt-1 text-xs text-zinc-500 dark:text-[#71717a]">
                         Updates as you type
                       </p>
                     </div>
@@ -1022,9 +1026,9 @@ export function ResumeBuilderContent() {
                     </span>
                   </div>
                   <article
-  ref={resumePreviewRef}
-  id="resume-print"
-  className="
+                    ref={resumePreviewRef}
+                    id="resume-print"
+                    className="
     resume-paper
     mx-auto
     min-h-[297mm]
@@ -1035,13 +1039,13 @@ export function ResumeBuilderContent() {
     text-[#27272a]
     shadow-2xl
   "
-  style={{
-    color: "#27272a",
-    backgroundColor: "#ffffff",
-  }}
->
-<header className="border-b-2 border-[#6d28d9] pb-5">                      
-  <h1 className="break-words text-3xl font-bold tracking-tight">
+                    style={{
+                      color: "#27272a",
+                      backgroundColor: "#ffffff",
+                    }}
+                  >
+                    <header className="border-b-2 border-[#6d28d9] pb-5">
+                      <h1 className="break-words text-3xl font-bold tracking-tight">
                         {resume.fullName || "Your Name"}
                       </h1>
                       <p className="mt-1 text-base font-semibold text-[#6d28d9]">
@@ -1216,7 +1220,7 @@ export function ResumeBuilderContent() {
                         </div>
                       )}
                   </article>
-                  <p className="mt-3 text-center text-xs leading-5 text-[#52525b]">
+                  <p className="mt-3 text-center text-xs leading-5 text-zinc-500 dark:text-zinc-600">
                     PDF export opens the browser print dialog. Select “Save as
                     PDF”.
                   </p>
@@ -1232,11 +1236,11 @@ export function ResumeBuilderContent() {
 
 function ResumeBuilderLoading() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#08090d] text-white">
+    <div className="flex min-h-screen items-center justify-center bg-zinc-50 text-zinc-900 dark:bg-[#08090d] dark:text-white">
       <div className="text-center">
-        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-zinc-700 border-t-violet-500" />
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-zinc-300 border-t-violet-500 dark:border-zinc-700 dark:border-t-violet-500" />
 
-        <p className="mt-4 text-sm text-zinc-500">
+        <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-500">
           Loading resume builder...
         </p>
       </div>

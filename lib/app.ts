@@ -74,8 +74,15 @@ export const apiRequest = async <T = ApiResponse>(
   ) => {
     const headers = new Headers(options.headers);
 
+    // Check if body is FormData
+    const isFormData =
+      typeof FormData !== "undefined" &&
+      options.body instanceof FormData;
+
+    // Only set JSON content type when body is NOT FormData
     if (
       options.body &&
+      !isFormData &&
       !headers.has("Content-Type")
     ) {
       headers.set(
@@ -83,6 +90,11 @@ export const apiRequest = async <T = ApiResponse>(
         "application/json"
       );
     }
+
+    // IMPORTANT:
+    // Do not manually set Content-Type for FormData.
+    // Browser will automatically set:
+    // multipart/form-data; boundary=...
 
     if (accessToken) {
       headers.set(

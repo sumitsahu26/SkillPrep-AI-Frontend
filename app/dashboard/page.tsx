@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-  type ElementType,
-} from "react";
+import { useEffect, useState, type ElementType } from "react";
 
 import Link from "next/link";
 
@@ -44,56 +40,35 @@ import {
 ========================================================= */
 
 export default function DashboardPage() {
-  const [
-    sidebarOpen,
-    setSidebarOpen,
-  ] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const [
-    dashboard,
-    setDashboard,
-  ] =
-    useState<DashboardData | null>(
-      null
-    );
+  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
 
-  const [
-    isLoading,
-    setIsLoading,
-  ] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [
-    error,
-    setError,
-  ] = useState("");
+  const [error, setError] = useState("");
 
   /* =====================================================
      LOAD
   ===================================================== */
 
-  const loadDashboard =
-    async () => {
-      try {
-        setIsLoading(true);
+  const loadDashboard = async () => {
+    try {
+      setIsLoading(true);
 
-        setError("");
+      setError("");
 
-        const response =
-          await getDashboard();
+      const response = await getDashboard();
 
-        setDashboard(
-          response.dashboard
-        );
-      } catch (error) {
-        setError(
-          error instanceof Error
-            ? error.message
-            : "Failed to load dashboard"
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      setDashboard(response.dashboard);
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Failed to load dashboard"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     loadDashboard();
@@ -105,79 +80,54 @@ export default function DashboardPage() {
   const [today, setToday] = useState("");
 
   useEffect(() => {
-    const formattedDate =
-      new Intl.DateTimeFormat(
-        "en-IN",
-        {
-          weekday: "long",
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        }
-      ).format(new Date());
-  
+    const formattedDate = new Intl.DateTimeFormat("en-IN", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(new Date());
+
     setToday(formattedDate);
   }, []);
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-[#08090d] text-zinc-100">
-        <Sidebar
-          open={sidebarOpen}
-          onClose={() =>
-            setSidebarOpen(false)
-          }
-        />
+      <div className="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-[#08090d] dark:text-zinc-100">
+        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         <div className="min-h-screen lg:pl-64">
-          <Topbar
-            onMenuClick={() =>
-              setSidebarOpen(true)
-            }
-          />
+          <Topbar onMenuClick={() => setSidebarOpen(true)} />
 
           <main className="mx-auto max-w-[1600px] p-4 sm:p-7 lg:p-9">
-
             {/* HEADER */}
 
             <section className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
               <div>
-                <p className="text-sm text-violet-400">
+                <p className="text-sm text-violet-600 dark:text-violet-400">
                   {today}
                 </p>
 
-                <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
-                  Welcome back!{" "}
-                  <span aria-hidden>
-                    👋
-                  </span>
+                <h1 className="mt-2 text-2xl font-bold tracking-tight text-zinc-900 dark:text-white sm:text-3xl">
+                  Welcome back! <span aria-hidden>👋</span>
                 </h1>
 
-                <p className="mt-2 text-sm leading-6 text-zinc-400">
-                  Build your resume, sharpen your skills, and prepare for your next opportunity.
+                <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
+                  Build your resume, sharpen your skills, and prepare for your
+                  next opportunity.
                 </p>
               </div>
 
               <div className="flex gap-3">
                 <button
                   type="button"
-                  onClick={
-                    loadDashboard
-                  }
-                  disabled={
-                    isLoading
-                  }
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-sm text-zinc-400 transition hover:bg-white/[0.04]"
+                  onClick={loadDashboard}
+                  disabled={isLoading}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 px-4 py-3 text-sm text-zinc-600 transition hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-400 dark:hover:bg-white/[0.04]"
                 >
                   <RefreshCw
                     size={16}
-                    className={
-                      isLoading
-                        ? "animate-spin"
-                        : ""
-                    }
+                    className={isLoading ? "animate-spin" : ""}
                   />
-
                   Refresh
                 </button>
 
@@ -185,25 +135,21 @@ export default function DashboardPage() {
                   href="/resume-builder"
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-500"
                 >
-                  <Plus
-                    size={18}
-                  />
-
+                  <Plus size={18} />
                   Create resume
                 </Link>
               </div>
             </section>
 
             {error && (
-              <div className="mt-5 rounded-xl border border-red-500/20 bg-red-500/[0.05] p-4 text-sm text-red-300">
+              <div className="mt-5 rounded-xl border border-red-500/20 bg-red-50 p-4 text-sm text-red-600 dark:bg-red-500/[0.05] dark:text-red-300">
                 {error}
               </div>
             )}
 
             {/* LOADING */}
 
-            {isLoading &&
-            !dashboard ? (
+            {isLoading && !dashboard ? (
               <div className="flex min-h-[500px] items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-violet-300" />
               </div>
@@ -214,67 +160,43 @@ export default function DashboardPage() {
                 <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                   <DashboardStatCard
                     title="My resumes"
-                    value={
-                      dashboard.stats
-                        .resumes
-                    }
+                    value={dashboard.stats.resumes}
                     description="Created resumes"
-                    icon={
-                      FileText
-                    }
+                    icon={FileText}
                   />
 
                   <DashboardStatCard
                     title="Interview completed"
-                    value={
-                      dashboard.stats
-                        .interviewCompleted
-                    }
+                    value={dashboard.stats.interviewCompleted}
                     description="Questions completed"
-                    icon={
-                      BrainCircuit
-                    }
+                    icon={BrainCircuit}
                   />
 
                   <DashboardStatCard
                     title="Assessments"
-                    value={
-                      dashboard.stats
-                        .assessmentsCompleted
-                    }
+                    value={dashboard.stats.assessmentsCompleted}
                     description="Skill assessments completed"
-                    icon={
-                      Trophy
-                    }
+                    icon={Trophy}
                   />
 
                   <DashboardStatCard
                     title="Mock interviews"
-                    value={
-                      dashboard.stats
-                        .mockInterviewsCompleted
-                    }
+                    value={dashboard.stats.mockInterviewsCompleted}
                     description="Completed interviews"
-                    icon={
-                      MessageSquare
-                    }
+                    icon={MessageSquare}
                   />
                 </section>
 
                 {/* READINESS + INTERVIEW */}
 
                 <section className="mt-6 grid gap-5 xl:grid-cols-[0.8fr_1.2fr]">
-
                   {/* CAREER READINESS */}
 
-                  <div className="rounded-2xl border border-white/[0.08] bg-[#101117] p-6">
+                  <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-white/[0.08] dark:bg-[#101117] dark:shadow-none">
                     <div className="flex items-center gap-2">
-                      <TrendingUp
-                        size={19}
-                        className="text-violet-300"
-                      />
+                      <TrendingUp size={19} className="text-violet-300" />
 
-                      <h2 className="font-semibold">
+                      <h2 className="font-semibold text-zinc-900 dark:text-white">
                         Career readiness
                       </h2>
                     </div>
@@ -283,55 +205,32 @@ export default function DashboardPage() {
                       <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-full border-[9px] border-violet-500/20">
                         <div className="text-center">
                           <p className="text-2xl font-bold text-violet-300">
-                            {
-                              dashboard
-                                .careerReadiness
-                                .score
-                            }
-                            %
+                            {dashboard.careerReadiness.score}%
                           </p>
 
-                          <p className="text-[10px] text-zinc-500">
-                            Overall
-                          </p>
+                          <p className="text-[10px] text-zinc-500">Overall</p>
                         </div>
                       </div>
 
                       <div className="flex-1 space-y-3">
                         <MiniProgress
                           label="Interview"
-                          value={
-                            dashboard
-                              .careerReadiness
-                              .interview
-                          }
+                          value={dashboard.careerReadiness.interview}
                         />
 
                         <MiniProgress
                           label="Assessment"
-                          value={
-                            dashboard
-                              .careerReadiness
-                              .assessment
-                          }
+                          value={dashboard.careerReadiness.assessment}
                         />
 
                         <MiniProgress
                           label="Mock Interview"
-                          value={
-                            dashboard
-                              .careerReadiness
-                              .mockInterview
-                          }
+                          value={dashboard.careerReadiness.mockInterview}
                         />
 
                         <MiniProgress
                           label="Roadmap"
-                          value={
-                            dashboard
-                              .careerReadiness
-                              .roadmap
-                          }
+                          value={dashboard.careerReadiness.roadmap}
                         />
                       </div>
                     </div>
@@ -339,14 +238,14 @@ export default function DashboardPage() {
 
                   {/* INTERVIEW PROGRESS */}
 
-                  <div className="rounded-2xl border border-white/[0.08] bg-[#101117] p-6">
+                  <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-white/[0.08] dark:bg-[#101117] dark:shadow-none">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h2 className="font-semibold">
+                        <h2 className="font-semibold text-zinc-900 dark:text-white">
                           Interview preparation
                         </h2>
 
-                        <p className="mt-1 text-xs text-zinc-500">
+                        <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-500">
                           Your question bank progress
                         </p>
                       </div>
@@ -357,59 +256,33 @@ export default function DashboardPage() {
                     <div className="mt-6">
                       <div className="flex items-end justify-between">
                         <div>
-                          <span className="text-3xl font-bold">
-                            {
-                              dashboard
-                                .interview
-                                .completed
-                            }
+                          <span className="text-3xl font-bold text-zinc-900 dark:text-white">
+                            {dashboard.interview.completed}
                           </span>
 
-                          <span className="text-zinc-500">
+                          <span className="text-zinc-600 dark:text-zinc-500">
                             {" "}
-                            /{" "}
-                            {
-                              dashboard
-                                .interview
-                                .total
-                            }
+                            / {dashboard.interview.total}
                           </span>
                         </div>
 
                         <span className="text-sm text-cyan-300">
-                          {
-                            dashboard
-                              .interview
-                              .percentage
-                          }
-                          %
+                          {dashboard.interview.percentage}%
                         </span>
                       </div>
 
-                      <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/[0.06]">
+                      <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-white/[0.06]">
                         <div
                           className="h-full rounded-full bg-cyan-500"
                           style={{
-                            width: `${
-                              dashboard
-                                .interview
-                                .percentage
-                            }%`,
+                            width: `${dashboard.interview.percentage}%`,
                           }}
                         />
                       </div>
 
                       <div className="mt-5 flex items-center gap-2 text-xs text-zinc-500">
-                        <Bookmark
-                          size={14}
-                        />
-
-                        {
-                          dashboard
-                            .interview
-                            .bookmarked
-                        }{" "}
-                        bookmarked questions
+                        <Bookmark size={14} />
+                        {dashboard.interview.bookmarked} bookmarked questions
                       </div>
 
                       <Link
@@ -417,10 +290,7 @@ export default function DashboardPage() {
                         className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-cyan-300"
                       >
                         Continue practice
-
-                        <ArrowRight
-                          size={15}
-                        />
+                        <ArrowRight size={15} />
                       </Link>
                     </div>
                   </div>
@@ -430,15 +300,14 @@ export default function DashboardPage() {
 
                 <section className="mt-6 grid items-start gap-6 xl:grid-cols-[1.2fr_0.8fr]">
                   <div className="space-y-6">
-
                     {/* QUICK ACTIONS */}
 
-                    <div className="rounded-2xl border border-white/[0.08] bg-[#101117] p-5 sm:p-6">
-                      <h2 className="text-lg font-semibold">
+                    <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-6 dark:border-white/[0.08] dark:bg-[#101117] dark:shadow-none">
+                      <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
                         Quick actions
                       </h2>
 
-                      <p className="mt-1 text-sm text-zinc-500">
+                      <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-500">
                         What would you like to work on today?
                       </p>
 
@@ -447,85 +316,65 @@ export default function DashboardPage() {
                           href="/resume-builder"
                           title="Build a resume"
                           description="Create or improve your professional resume."
-                          icon={
-                            FileText
-                          }
+                          icon={FileText}
                         />
 
                         <QuickAction
                           href="/interview-preparation"
                           title="Interview preparation"
                           description="Practice technical interview questions."
-                          icon={
-                            BrainCircuit
-                          }
+                          icon={BrainCircuit}
                         />
 
                         <QuickAction
                           href="/mock-interview"
                           title="AI mock interview"
                           description="Practice and receive AI feedback."
-                          icon={
-                            Sparkles
-                          }
+                          icon={Sparkles}
                         />
 
                         <QuickAction
                           href="/skill-assessment"
                           title="Skill assessment"
                           description="Measure your technical knowledge."
-                          icon={
-                            ClipboardCheck
-                          }
+                          icon={ClipboardCheck}
                         />
 
                         <QuickAction
                           href="/roadmap"
                           title="Learning roadmap"
                           description="Continue your personalized learning path."
-                          icon={
-                            Map
-                          }
+                          icon={Map}
                         />
 
                         <QuickAction
                           href="/ai-mentor"
                           title="AI Career Mentor"
                           description="Ask AI for personalized career guidance."
-                          icon={
-                            BriefcaseBusiness
-                          }
+                          icon={BriefcaseBusiness}
                         />
                       </div>
                     </div>
 
                     {/* RECENT ACTIVITY */}
 
-                    <div className="rounded-2xl border border-white/[0.08] bg-[#101117] p-5 sm:p-6">
-                      <h2 className="text-lg font-semibold">
+                    <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-6 dark:border-white/[0.08] dark:bg-[#101117] dark:shadow-none">
+                      <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
                         Recent activity
                       </h2>
 
-                      <p className="mt-1 text-sm text-zinc-500">
+                      <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-500">
                         Your latest SkillPrep activity
                       </p>
 
-                      {dashboard
-                        .recentActivity
-                        .length ? (
+                      {dashboard.recentActivity.length ? (
                         <div className="mt-5 space-y-3">
-                          {dashboard.recentActivity.map(
-                            (
-                              activity
-                            ) => (
-                              <ActivityItem
-                                key={`${activity.type}-${activity.id}`}
-                                activity={
-                                  activity
-                                }
-                              />
-                            )
-                          )}
+                          {dashboard.recentActivity.map((activity) => (
+                            <ActivityItem
+                              key={`${activity.type}-${activity.id}`}
+                              activity={activity}
+                            />
+                          ))}
                         </div>
                       ) : (
                         <EmptyState text="No activity yet. Start an assessment or interview." />
@@ -534,14 +383,14 @@ export default function DashboardPage() {
 
                     {/* RECENT RESUMES */}
 
-                    <div className="rounded-2xl border border-white/[0.08] bg-[#101117] p-5 sm:p-6">
+                    <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-6 dark:border-white/[0.08] dark:bg-[#101117] dark:shadow-none">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h2 className="text-lg font-semibold">
+                          <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
                             Recent resumes
                           </h2>
 
-                          <p className="mt-1 text-sm text-zinc-500">
+                          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-500">
                             Your recently updated resumes
                           </p>
                         </div>
@@ -554,51 +403,36 @@ export default function DashboardPage() {
                         </Link>
                       </div>
 
-                      {dashboard
-                        .recentResumes
-                        .length ? (
+                      {dashboard.recentResumes.length ? (
                         <div className="mt-5 space-y-3">
-                          {dashboard.recentResumes.map(
-                            (
-                              resume
-                            ) => (
-                              <Link
-                                key={
-                                  resume._id
-                                }
-                                href={`/resume-builder?id=${resume._id}`}
-                                className="flex items-center gap-3 rounded-xl border border-white/[0.06] p-4 transition hover:border-violet-500/30"
-                              >
-                                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-500/10">
-                                  <FileUser
-                                    size={20}
-                                    className="text-violet-300"
-                                  />
-                                </div>
+                          {dashboard.recentResumes.map((resume) => (
+                            <Link
+                              key={resume._id}
+                              href={`/resume-builder?id=${resume._id}`}
+                              className="flex items-center gap-3 rounded-xl border border-white/[0.06] p-4 transition hover:border-violet-500/30"
+                            >
+                              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-500/10">
+                                <FileUser
+                                  size={20}
+                                  className="text-violet-300"
+                                />
+                              </div>
 
-                                <div className="min-w-0 flex-1">
-                                  <p className="truncate text-sm font-medium">
-                                    {
-                                      resume.title
-                                    }
-                                  </p>
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-medium text-zinc-900 dark:text-white">
+                                  {resume.title}
+                                </p>
 
-                                  <p className="mt-1 text-xs text-zinc-500">
-                                    Updated{" "}
-                                    {formatDate(
-                                      resume.updatedAt
-                                    )}
-                                  </p>
-                                </div>
+                                <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-500">
+                                  Updated {formatDate(resume.updatedAt)}
+                                </p>
+                              </div>
 
-                                <span className="rounded-lg bg-amber-500/[0.08] px-2 py-1 text-xs text-amber-300">
-                                  {
-                                    resume.status
-                                  }
-                                </span>
-                              </Link>
-                            )
-                          )}
+                              <span className="rounded-lg bg-amber-500/[0.08] px-2 py-1 text-xs text-amber-300">
+                                {resume.status}
+                              </span>
+                            </Link>
+                          ))}
                         </div>
                       ) : (
                         <EmptyState text="You haven't created a resume yet." />
@@ -609,55 +443,38 @@ export default function DashboardPage() {
                   {/* RIGHT */}
 
                   <div className="space-y-6">
-
                     {/* ROADMAP */}
 
-                    <div className="rounded-2xl border border-white/[0.08] bg-[#101117] p-6">
+                    <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-white/[0.08] dark:bg-[#101117] dark:shadow-none">
                       <div className="flex items-center gap-2">
-                        <Code2
-                          size={18}
-                          className="text-amber-300"
-                        />
+                        <Code2 size={18} className="text-amber-300" />
 
-                        <h2 className="font-semibold">
+                        <h2 className="font-semibold text-zinc-900 dark:text-white">
                           Learning roadmap
                         </h2>
                       </div>
 
                       {dashboard.roadmap ? (
                         <>
-                          <p className="mt-5 text-sm font-medium">
-                            {
-                              dashboard
-                                .roadmap
-                                .targetRole
-                            }
+                          <p className="mt-5 text-sm font-medium text-zinc-900 dark:text-white">
+                            {dashboard.roadmap.targetRole}
                           </p>
 
                           <div className="mt-4 flex justify-between text-xs">
-                            <span className="text-zinc-500">
+                            <span className="text-zinc-600 dark:text-zinc-500">
                               Progress
                             </span>
 
                             <span className="text-amber-300">
-                              {
-                                dashboard
-                                  .roadmap
-                                  .progress
-                              }
-                              %
+                              {dashboard.roadmap.progress}%
                             </span>
                           </div>
 
-                          <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/[0.06]">
+                          <div className="mt-2 h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-white/[0.06]">
                             <div
                               className="h-full rounded-full bg-amber-500"
                               style={{
-                                width: `${
-                                  dashboard
-                                    .roadmap
-                                    .progress
-                                }%`,
+                                width: `${dashboard.roadmap.progress}%`,
                               }}
                             />
                           </div>
@@ -667,10 +484,7 @@ export default function DashboardPage() {
                             className="mt-5 inline-flex items-center gap-2 text-sm text-amber-300"
                           >
                             Continue roadmap
-
-                            <ArrowRight
-                              size={14}
-                            />
+                            <ArrowRight size={14} />
                           </Link>
                         </>
                       ) : (
@@ -680,78 +494,54 @@ export default function DashboardPage() {
 
                     {/* SKILLS */}
 
-                    <div className="rounded-2xl border border-white/[0.08] bg-[#101117] p-6">
+                    <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-white/[0.08] dark:bg-[#101117] dark:shadow-none">
                       <div className="flex items-center gap-2">
-                        <Target
-                          size={18}
-                          className="text-emerald-300"
-                        />
+                        <Target size={18} className="text-emerald-300" />
 
-                        <h2 className="font-semibold">
+                        <h2 className="font-semibold text-zinc-900 dark:text-white">
                           Skill performance
                         </h2>
                       </div>
 
-                      {dashboard
-                        .skillPerformance
-                        .length ? (
+                      {dashboard.skillPerformance.length ? (
                         <div className="mt-5 space-y-5">
-                          {dashboard.skillPerformance.map(
-                            (
-                              skill,
-                              index
-                            ) => (
-                              <div
-                                key={`${skill.technology}-${skill.topic}-${index}`}
-                              >
-                                <div className="flex justify-between gap-3">
-                                  <div>
-                                    <p className="text-sm font-medium">
-                                      {
-                                        skill.technology
-                                      }
-                                    </p>
+                          {dashboard.skillPerformance.map((skill, index) => (
+                            <div
+                              key={`${skill.technology}-${skill.topic}-${index}`}
+                            >
+                              <div className="flex justify-between gap-3">
+                                <div>
+                                  <p className="text-sm font-medium text-zinc-900 dark:text-white">
+                                    {skill.technology}
+                                  </p>
 
-                                    <p className="text-xs text-zinc-600">
-                                      {
-                                        skill.topic
-                                      }{" "}
-                                      ·{" "}
-                                      {
-                                        skill.skillLevel
-                                      }
-                                    </p>
-                                  </div>
-
-                                  <span className="text-sm text-emerald-300">
-                                    {
-                                      skill.percentage
-                                    }
-                                    %
-                                  </span>
+                                  <p className="text-xs text-zinc-500 dark:text-zinc-600">
+                                    {skill.topic} · {skill.skillLevel}
+                                  </p>
                                 </div>
 
-                                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
-                                  <div
-                                    className="h-full rounded-full bg-emerald-500"
-                                    style={{
-                                      width: `${skill.percentage}%`,
-                                    }}
-                                  />
-                                </div>
+                                <span className="text-sm text-emerald-300">
+                                  {skill.percentage}%
+                                </span>
                               </div>
-                            )
-                          )}
+
+                              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+                                <div
+                                  className="h-full rounded-full bg-emerald-500"
+                                  style={{
+                                    width: `${skill.percentage}%`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          ))}
 
                           <Link
                             href="/skill-assessment"
                             className="inline-flex items-center gap-2 text-sm text-emerald-300"
                           >
                             Take assessment
-
-                            <ArrowRight
-                              size={14}
-                            />
+                            <ArrowRight size={14} />
                           </Link>
                         </div>
                       ) : (
@@ -761,28 +551,24 @@ export default function DashboardPage() {
 
                     {/* AI MENTOR */}
 
-                    <div className="rounded-2xl border border-violet-500/15 bg-violet-500/[0.04] p-6">
+                    <div className="rounded-2xl border border-violet-200 bg-violet-50 p-6 dark:border-violet-500/15 dark:bg-violet-500/[0.04]">
                       <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-500/10">
                         <Sparkles className="text-violet-300" />
                       </div>
 
-                      <h2 className="mt-4 font-semibold">
-                        Need guidance?
-                      </h2>
+                      <h2 className="mt-4 font-semibold">Need guidance?</h2>
 
                       <p className="mt-2 text-sm leading-6 text-zinc-500">
-                        Ask your AI Career Mentor what to learn next, how to improve your resume, or how to prepare for interviews.
+                        Ask your AI Career Mentor what to learn next, how to
+                        improve your resume, or how to prepare for interviews.
                       </p>
 
                       <Link
                         href="/ai-mentor"
-                        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold"
+                        className="mt-5 inline-flex text-white items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold"
                       >
                         Ask AI Mentor
-
-                        <ArrowRight
-                          size={15}
-                        />
+                        <ArrowRight size={15} />
                       </Link>
                     </div>
                   </div>
@@ -790,7 +576,7 @@ export default function DashboardPage() {
               </>
             ) : null}
 
-            <footer className="mt-10 border-t border-white/[0.07] py-6 text-center text-xs text-zinc-600">
+            <footer className="mt-10 border-t border-zinc-200 py-6 text-center text-xs text-zinc-500 dark:border-white/[0.07] dark:text-zinc-600">
               SkillPrep AI · Your career preparation workspace
             </footer>
           </main>
@@ -816,27 +602,20 @@ function DashboardStatCard({
   icon: ElementType;
 }) {
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-[#101117] p-5">
+    <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-white/[0.08] dark:bg-[#101117] dark:shadow-none">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm text-zinc-500">
-            {title}
-          </p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-500">{title}</p>
 
-          <p className="mt-2 text-3xl font-bold">
-            {value}
-          </p>
+          <p className="mt-2 text-3xl font-bold">{value}</p>
 
-          <p className="mt-2 text-xs text-zinc-600">
+          <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-600">
             {description}
           </p>
         </div>
 
         <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-500/10">
-          <Icon
-            size={20}
-            className="text-violet-300"
-          />
+          <Icon size={20} className="text-violet-300" />
         </div>
       </div>
     </div>
@@ -864,10 +643,7 @@ function QuickAction({
       className="group rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 transition hover:border-violet-400/30 hover:bg-violet-500/[0.04]"
     >
       <div className="flex items-center justify-between">
-        <Icon
-          size={21}
-          className="text-violet-300"
-        />
+        <Icon size={21} className="text-violet-300" />
 
         <ArrowRight
           size={15}
@@ -875,13 +651,9 @@ function QuickAction({
         />
       </div>
 
-      <h3 className="mt-4 text-sm font-semibold">
-        {title}
-      </h3>
+      <h3 className="mt-4 text-sm font-semibold">{title}</h3>
 
-      <p className="mt-1 text-xs leading-5 text-zinc-500">
-        {description}
-      </p>
+      <p className="mt-1 text-xs leading-5 text-zinc-500">{description}</p>
     </Link>
   );
 }
@@ -890,51 +662,35 @@ function QuickAction({
    ACTIVITY
 ========================================================= */
 
-function ActivityItem({
-  activity,
-}: {
-  activity:
-    DashboardActivity;
-}) {
+function ActivityItem({ activity }: { activity: DashboardActivity }) {
   const Icon =
-    activity.type ===
-    "assessment"
+    activity.type === "assessment"
       ? Trophy
-      : activity.type ===
-          "mock"
-        ? MessageSquare
-        : FileText;
+      : activity.type === "mock"
+      ? MessageSquare
+      : FileText;
 
   return (
     <Link
-      href={
-        activity.href
-      }
+      href={activity.href}
       className="flex items-center gap-3 rounded-xl border border-white/[0.06] p-4 transition hover:border-violet-500/30"
     >
       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/10">
-        <Icon
-          size={18}
-          className="text-violet-300"
-        />
+        <Icon size={18} className="text-violet-300" />
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">
+        <p className="truncate text-sm font-medium text-zinc-900 dark:text-white">
           {activity.title}
         </p>
 
-        <p className="mt-1 text-xs text-zinc-500">
-          {
-            activity.description
-          }
+        <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-500">
+          {activity.description}
         </p>
       </div>
 
-      <span className="text-xs text-zinc-600">
-        {formatDate(
-          activity.date
-        )}
+      <span className="text-xs text-zinc-500 dark:text-zinc-600">
+        {formatDate(activity.date)}
       </span>
     </Link>
   );
@@ -944,26 +700,16 @@ function ActivityItem({
    PROGRESS
 ========================================================= */
 
-function MiniProgress({
-  label,
-  value,
-}: {
-  label: string;
-  value: number;
-}) {
+function MiniProgress({ label, value }: { label: string; value: number }) {
   return (
     <div>
       <div className="mb-1 flex justify-between text-xs">
-        <span className="text-zinc-500">
-          {label}
-        </span>
+        <span className="text-zinc-600 dark:text-zinc-500">{label}</span>
 
-        <span>
-          {value}%
-        </span>
+        <span>{value}%</span>
       </div>
 
-      <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+      <div className="h-1.5 overflow-hidden rounded-full bg-zinc-200 dark:bg-white/[0.06]">
         <div
           className="h-full rounded-full bg-violet-500"
           style={{
@@ -979,21 +725,12 @@ function MiniProgress({
    EMPTY
 ========================================================= */
 
-function EmptyState({
-  text,
-}: {
-  text: string;
-}) {
+function EmptyState({ text }: { text: string }) {
   return (
-    <div className="mt-5 rounded-xl border border-dashed border-white/[0.08] p-6 text-center">
-      <CheckCircle2
-        size={20}
-        className="mx-auto text-zinc-700"
-      />
+    <div className="mt-5 rounded-xl border border-dashed border-zinc-200 p-6 text-center dark:border-white/[0.08]">
+      <CheckCircle2 size={20} className="mx-auto text-zinc-700" />
 
-      <p className="mt-2 text-xs leading-5 text-zinc-600">
-        {text}
-      </p>
+      <p className="mt-2 text-xs leading-5 text-zinc-600">{text}</p>
     </div>
   );
 }
@@ -1009,11 +746,8 @@ function formatDate(value: string) {
     return "";
   }
 
-  return new Intl.DateTimeFormat(
-    "en-IN",
-    {
-      day: "numeric",
-      month: "short",
-    }
-  ).format(date);
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "short",
+  }).format(date);
 }

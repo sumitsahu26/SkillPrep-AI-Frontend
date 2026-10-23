@@ -37,7 +37,9 @@ import {
   type MockAnswerEvaluation,
 } from "@/services/mockInterviewApi";
 
-//  TECHNOLOGIES
+/* =========================================================
+   TECHNOLOGIES
+========================================================= */
 
 const technologyOptions = [
   "JavaScript",
@@ -54,7 +56,9 @@ const technologyOptions = [
   "System Design",
 ];
 
-//  TOPICS
+/* =========================================================
+   TOPICS
+========================================================= */
 
 const topicOptions: Record<string, string[]> = {
   JavaScript: [
@@ -193,69 +197,65 @@ const topicOptions: Record<string, string[]> = {
   ],
 };
 
-//  PAGE STATE
+/* =========================================================
+   PAGE STATE
+========================================================= */
 
 type PageMode = "setup" | "interview" | "result";
 
-//  PAGE
+/* =========================================================
+   PAGE
+========================================================= */
 
 export default function MockInterviewPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
   const [mode, setMode] = useState<PageMode>("setup");
 
-  //  SETUP
+  /* SETUP */
 
   const [technology, setTechnology] = useState("Node.js");
-
   const [topic, setTopic] = useState("General");
 
   const [difficulty, setDifficulty] =
     useState<MockInterviewDifficulty>("Medium");
 
   const [experience, setExperience] = useState("3-5 years");
-
   const [questionCount, setQuestionCount] = useState(5);
 
-  //  INTERVIEW
+  /* INTERVIEW */
 
   const [interview, setInterview] = useState<MockInterview | null>(null);
-
   const [currentIndex, setCurrentIndex] = useState(0);
-
   const [answer, setAnswer] = useState("");
 
-  //  HISTORY
+  /* HISTORY */
 
   const [history, setHistory] = useState<MockInterview[]>([]);
-
   const [historyLoading, setHistoryLoading] = useState(false);
 
-  //  UI STATE
+  /* UI STATE */
 
   const [isStarting, setIsStarting] = useState(false);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [isCompleting, setIsCompleting] = useState(false);
 
   const [error, setError] = useState("");
-
   const [message, setMessage] = useState("");
 
-  // resume loading state
   const [resumingId, setResumingId] = useState<string | null>(null);
 
-  // evaluation states
+  /* EVALUATION */
+
   const [evaluation, setEvaluation] = useState<MockAnswerEvaluation | null>(
     null
   );
 
   const [evaluationSuccessful, setEvaluationSuccessful] = useState(false);
-
   const [showEvaluation, setShowEvaluation] = useState(false);
 
-  //  LOAD HISTORY
+  /* =====================================================
+     LOAD HISTORY
+  ===================================================== */
 
   const loadHistory = async () => {
     try {
@@ -277,17 +277,23 @@ export default function MockInterviewPage() {
     loadHistory();
   }, []);
 
-  //  TOPIC OPTIONS
+  /* =====================================================
+     TOPICS
+  ===================================================== */
 
   const availableTopics = useMemo(() => {
     return topicOptions[technology] || ["General"];
   }, [technology]);
 
-  //  CURRENT QUESTION
+  /* =====================================================
+     CURRENT QUESTION
+  ===================================================== */
 
   const currentQuestion = interview?.questions?.[currentIndex];
 
-  //  OPEN QUESTION
+  /* =====================================================
+     OPEN QUESTION
+  ===================================================== */
 
   const openQuestion = (
     index: number,
@@ -303,22 +309,9 @@ export default function MockInterviewPage() {
       return;
     }
 
-    /* Change current question */
-
     setCurrentIndex(index);
-
-    /* Restore saved answer */
-
     setAnswer(question.userAnswer || "");
-
-    /* Clear old errors */
-
     setError("");
-
-    /*
-     * Restore evaluation if this
-     * question was already evaluated.
-     */
 
     const hasEvaluation = Boolean(
       question.feedback ||
@@ -330,92 +323,67 @@ export default function MockInterviewPage() {
     if (hasEvaluation) {
       setEvaluation({
         score: question.score ?? 0,
-
         feedback: question.feedback || "",
-
         strengths: question.strengths || [],
-
         improvements: question.improvements || [],
-
         betterAnswer: question.betterAnswer || "",
       });
 
-      /*
-       * If betterAnswer exists,
-       * AI evaluation was successful.
-       *
-       * If backend stored the
-       * "evaluation unavailable"
-       * feedback, this stays false.
-       */
-
       setEvaluationSuccessful(Boolean(question.betterAnswer));
-
       setShowEvaluation(true);
     } else {
       setEvaluation(null);
-
       setEvaluationSuccessful(false);
-
       setShowEvaluation(false);
     }
   };
 
-  //  PROGRESS
+  /* =====================================================
+     PROGRESS
+  ===================================================== */
 
   const progress =
     interview && interview.questions.length > 0
       ? Math.round(((currentIndex + 1) / interview.questions.length) * 100)
       : 0;
 
-  //  TECHNOLOGY CHANGE
+  /* =====================================================
+     TECHNOLOGY
+  ===================================================== */
 
   const handleTechnologyChange = (value: string) => {
     setTechnology(value);
-
     setTopic("General");
   };
 
-  //  START INTERVIEW
+  /* =====================================================
+     START INTERVIEW
+  ===================================================== */
 
   const handleStartInterview = async () => {
     try {
       setIsStarting(true);
-
       setError("");
-
       setMessage("");
 
       const response = await startMockInterview({
         technology,
-
         topic,
-
         difficulty,
-
         experience,
-
         questionCount,
       });
 
       if (!response.success) {
         setError(response.message || "Failed to start interview");
-
         return;
       }
 
-      setInterview(
-        response.interview
-      );
-      
-      openQuestion(
-        0,
-        response.interview
-      );
-      
-      setMode(
-        "interview"
-      );
+      setInterview(response.interview);
+
+      openQuestion(0, response.interview);
+
+      setMode("interview");
 
       if (response.usedFallback) {
         setMessage(
@@ -433,7 +401,9 @@ export default function MockInterviewPage() {
     }
   };
 
-  //  SAVE ANSWER
+  /* =====================================================
+     SAVE ANSWER
+  ===================================================== */
 
   const saveCurrentAnswer = async () => {
     if (!interview || !currentQuestion) {
@@ -442,17 +412,13 @@ export default function MockInterviewPage() {
 
     if (!answer.trim()) {
       setError("Please enter your answer before continuing.");
-
       return;
     }
 
     try {
       setIsSubmitting(true);
-
       setError("");
-
       setEvaluation(null);
-
       setShowEvaluation(false);
 
       const response = await submitMockAnswer(
@@ -463,20 +429,12 @@ export default function MockInterviewPage() {
 
       if (!response.success) {
         setError(response.message || "Failed to submit answer");
-
         return;
       }
 
       setInterview(response.interview);
-
       setEvaluation(response.evaluation);
-
       setEvaluationSuccessful(response.evaluationSuccessful);
-
-      /*
-       * Important:
-       * Don't move to next question yet.
-       */
       setShowEvaluation(true);
     } catch (err) {
       console.error("Submit answer:", err);
@@ -487,19 +445,13 @@ export default function MockInterviewPage() {
     }
   };
 
-  //  NEXT
+  /* =====================================================
+     NEXT
+  ===================================================== */
 
   const handleNext = async () => {
-    /*
-     * Answer has not been submitted yet.
-     *
-     * First click:
-     * Submit → AI evaluation
-     */
-
     if (!showEvaluation) {
       await saveCurrentAnswer();
-
       return;
     }
 
@@ -509,29 +461,17 @@ export default function MockInterviewPage() {
 
     const nextIndex = currentIndex + 1;
 
-    /*
-     * Last question:
-     * complete interview.
-     */
-
     if (nextIndex >= interview.questions.length) {
       await handleComplete(interview);
-
       return;
     }
-
-    /*
-     * Open next question.
-     *
-     * If already answered,
-     * its saved evaluation will
-     * automatically be restored.
-     */
 
     openQuestion(nextIndex);
   };
 
-  //  PREVIOUS
+  /* =====================================================
+     PREVIOUS
+  ===================================================== */
 
   const handlePrevious = () => {
     if (!interview || currentIndex === 0) {
@@ -541,7 +481,9 @@ export default function MockInterviewPage() {
     openQuestion(currentIndex - 1);
   };
 
-  //  COMPLETE
+  /* =====================================================
+     COMPLETE
+  ===================================================== */
 
   const handleComplete = async (
     targetInterview: MockInterview | null = interview
@@ -552,16 +494,13 @@ export default function MockInterviewPage() {
 
     try {
       setIsCompleting(true);
-
       setError("");
 
       const response = await completeMockInterview(targetInterview._id);
 
       if (response.success) {
         setInterview(response.interview);
-
         setMode("result");
-
         await loadHistory();
       }
     } catch (err) {
@@ -575,7 +514,9 @@ export default function MockInterviewPage() {
     }
   };
 
-  //  ABANDON
+  /* =====================================================
+     ABANDON
+  ===================================================== */
 
   const handleAbandon = async () => {
     if (!interview) {
@@ -589,70 +530,48 @@ export default function MockInterviewPage() {
     }
 
     setInterview(null);
-
     setAnswer("");
-    
     setCurrentIndex(0);
-    
     setEvaluation(null);
-    
-    setEvaluationSuccessful(
-      false
-    );
-    
+    setEvaluationSuccessful(false);
     setShowEvaluation(false);
-    
     setMode("setup");
-    
     setError("");
-    
     setMessage("");
 
     await loadHistory();
   };
 
-  //  NEW INTERVIEW
+  /* =====================================================
+     NEW INTERVIEW
+  ===================================================== */
 
-  const handleNewInterview =
-  () => {
+  const handleNewInterview = () => {
     setInterview(null);
-
     setCurrentIndex(0);
-
     setAnswer("");
-
     setEvaluation(null);
-
-    setEvaluationSuccessful(
-      false
-    );
-
+    setEvaluationSuccessful(false);
     setShowEvaluation(false);
-
     setError("");
-
     setMessage("");
-
     setMode("setup");
   };
 
   /* =====================================================
-   RESUME INTERVIEW
-===================================================== */
+     RESUME INTERVIEW
+  ===================================================== */
 
   const handleResumeInterview = async (interviewId: string) => {
     try {
       setResumingId(interviewId);
-
       setError("");
-
       setMessage("");
 
       const response = await getMockInterview(interviewId);
 
       if (!response.success) {
         setError(response.message || "Failed to load interview");
-
         return;
       }
 
@@ -660,41 +579,18 @@ export default function MockInterviewPage() {
 
       if (loadedInterview.status !== "in_progress") {
         setError("This interview is no longer in progress.");
-
         return;
       }
 
-      /*
-       * Backend already tracks
-       * currentQuestionIndex.
-       */
-
       let resumeIndex = loadedInterview.currentQuestionIndex;
-
-      /*
-       * Safety check.
-       *
-       * If currentQuestionIndex has
-       * reached the end, use the last
-       * question.
-       */
 
       if (resumeIndex >= loadedInterview.questions.length) {
         resumeIndex = Math.max(loadedInterview.questions.length - 1, 0);
       }
 
-      setInterview(
-        loadedInterview
-      );
-      
-      openQuestion(
-        resumeIndex,
-        loadedInterview
-      );
-      
-      setMode(
-        "interview"
-      );
+      setInterview(loadedInterview);
+      openQuestion(resumeIndex, loadedInterview);
+      setMode("interview");
     } catch (err) {
       console.error("Resume mock interview:", err);
 
@@ -706,23 +602,23 @@ export default function MockInterviewPage() {
     }
   };
 
-  //  SETUP SCREEN
+  /* =====================================================
+     SETUP SCREEN
+  ===================================================== */
 
   const renderSetup = () => (
     <>
-      {/* HEADING */}
-
       <div className="mb-7">
-        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-violet-500/20 bg-violet-500/10 px-3 py-1.5 text-xs font-medium text-violet-300">
+        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-medium text-violet-700 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300">
           <BrainCircuit size={14} />
           AI MOCK INTERVIEW
         </div>
 
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+        <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white sm:text-4xl">
           Practice like a real interview
         </h1>
 
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400 sm:text-base">
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-slate-400 sm:text-base">
           Select your technology, topic and experience level. SkillPrep will use
           your question bank and automatically generate missing questions when
           needed.
@@ -760,11 +656,13 @@ export default function MockInterviewPage() {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         {/* SETUP */}
 
-        <section className="rounded-2xl border border-white/[0.08] bg-[#111624] p-5 sm:p-6">
+        <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-white/[0.08] dark:bg-[#111624] dark:shadow-none sm:p-6">
           <div className="mb-6">
-            <h2 className="text-lg font-semibold">Configure interview</h2>
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
+              Configure interview
+            </h2>
 
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-sm text-zinc-600 dark:text-slate-400">
               Choose the type of interview you want to practice.
             </p>
           </div>
@@ -814,14 +712,19 @@ export default function MockInterviewPage() {
             />
           </div>
 
-          <div className="mt-6 rounded-xl border border-violet-500/15 bg-violet-500/[0.06] p-4">
+          <div className="mt-6 rounded-xl border border-violet-200 bg-violet-50 p-4 dark:border-violet-500/15 dark:bg-violet-500/[0.06]">
             <div className="flex gap-3">
-              <Database size={18} className="mt-0.5 shrink-0 text-violet-300" />
+              <Database
+                size={18}
+                className="mt-0.5 shrink-0 text-violet-600 dark:text-violet-300"
+              />
 
               <div>
-                <p className="text-sm font-medium">Database-first interview</p>
+                <p className="text-sm font-medium text-zinc-900 dark:text-white">
+                  Database-first interview
+                </p>
 
-                <p className="mt-1 text-xs leading-5 text-slate-400">
+                <p className="mt-1 text-xs leading-5 text-zinc-600 dark:text-slate-400">
                   Existing questions are used first. If there are not enough, AI
                   generates only the missing questions and saves them to your
                   question bank.
@@ -854,8 +757,10 @@ export default function MockInterviewPage() {
 
         {/* HOW IT WORKS */}
 
-        <aside className="rounded-2xl border border-white/[0.08] bg-[#111624] p-5">
-          <h2 className="font-semibold">Interview flow</h2>
+        <aside className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-white/[0.08] dark:bg-[#111624] dark:shadow-none">
+          <h2 className="font-semibold text-zinc-900 dark:text-white">
+            Interview flow
+          </h2>
 
           <div className="mt-5 space-y-5">
             <FlowItem
@@ -890,25 +795,35 @@ export default function MockInterviewPage() {
       <section className="mt-7">
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold">Recent interviews</h2>
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
+              Recent interviews
+            </h2>
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-zinc-500 dark:text-slate-500">
               Your mock interview history.
             </p>
           </div>
 
           {historyLoading && (
-            <Loader2 size={18} className="animate-spin text-violet-300" />
+            <Loader2
+              size={18}
+              className="animate-spin text-violet-600 dark:text-violet-300"
+            />
           )}
         </div>
 
         {history.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-white/10 bg-[#111624] p-10 text-center">
-            <History size={28} className="mx-auto mb-3 text-slate-600" />
+          <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-10 text-center dark:border-white/10 dark:bg-[#111624]">
+            <History
+              size={28}
+              className="mx-auto mb-3 text-zinc-400 dark:text-slate-600"
+            />
 
-            <p className="font-medium">No mock interviews yet</p>
+            <p className="font-medium text-zinc-900 dark:text-white">
+              No mock interviews yet
+            </p>
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-zinc-500 dark:text-slate-500">
               Start your first interview above.
             </p>
           </div>
@@ -917,13 +832,15 @@ export default function MockInterviewPage() {
             {history.slice(0, 6).map((item) => (
               <div
                 key={item._id}
-                className="rounded-2xl border border-white/[0.08] bg-[#111624] p-4"
+                className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/[0.08] dark:bg-[#111624] dark:shadow-none"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-semibold">{item.title}</p>
+                    <p className="font-semibold text-zinc-900 dark:text-white">
+                      {item.title}
+                    </p>
 
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-zinc-500 dark:text-slate-500">
                       {item.topic} • {item.difficulty} • {item.questionCount}{" "}
                       questions
                     </p>
@@ -937,7 +854,7 @@ export default function MockInterviewPage() {
                     type="button"
                     onClick={() => handleResumeInterview(item._id)}
                     disabled={resumingId === item._id}
-                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-violet-500/20 bg-violet-500/10 px-4 py-2.5 text-sm font-medium text-violet-300 transition hover:bg-violet-500/15 disabled:opacity-50"
+                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-medium text-violet-700 transition hover:bg-violet-100 disabled:opacity-50 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300 dark:hover:bg-violet-500/15"
                   >
                     {resumingId === item._id ? (
                       <>
@@ -954,10 +871,12 @@ export default function MockInterviewPage() {
                 )}
 
                 {item.status === "completed" && (
-                  <div className="mt-4 flex items-center justify-between border-t border-white/[0.06] pt-3 text-sm">
-                    <span className="text-slate-500">Score</span>
+                  <div className="mt-4 flex items-center justify-between border-t border-zinc-200 pt-3 text-sm dark:border-white/[0.06]">
+                    <span className="text-zinc-500 dark:text-slate-500">
+                      Score
+                    </span>
 
-                    <span className="font-semibold text-violet-300">
+                    <span className="font-semibold text-violet-600 dark:text-violet-300">
                       {item.percentage}%
                     </span>
                   </div>
@@ -970,7 +889,9 @@ export default function MockInterviewPage() {
     </>
   );
 
-  //  INTERVIEW SCREEN
+  /* =====================================================
+     INTERVIEW SCREEN
+  ===================================================== */
 
   const renderInterview = () => {
     if (!interview || !currentQuestion) {
@@ -978,7 +899,6 @@ export default function MockInterviewPage() {
     }
 
     const total = interview.questions.length;
-
     const isLast = currentIndex === total - 1;
 
     return (
@@ -988,24 +908,24 @@ export default function MockInterviewPage() {
         <div className="mb-6 flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
           <div>
             <div className="mb-2 flex flex-wrap items-center gap-2">
-              <span className="rounded-md border border-violet-500/20 bg-violet-500/10 px-2.5 py-1 text-xs text-violet-300">
+              <span className="rounded-md border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs text-violet-700 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300">
                 {interview.technology}
               </span>
 
-              <span className="rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1 text-xs text-slate-400">
+              <span className="rounded-md border border-zinc-200 bg-white px-2.5 py-1 text-xs text-zinc-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-400">
                 {interview.topic}
               </span>
 
-              <span className="rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1 text-xs text-slate-400">
+              <span className="rounded-md border border-zinc-200 bg-white px-2.5 py-1 text-xs text-zinc-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-400">
                 {interview.difficulty}
               </span>
             </div>
 
-            <h1 className="text-2xl font-bold sm:text-3xl">
+            <h1 className="text-2xl font-bold text-zinc-900 dark:text-white sm:text-3xl">
               {interview.title}
             </h1>
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-zinc-500 dark:text-slate-500">
               Question {currentIndex + 1} of {total}
             </p>
           </div>
@@ -1013,7 +933,7 @@ export default function MockInterviewPage() {
           <button
             type="button"
             onClick={handleAbandon}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-500/20 bg-rose-500/[0.06] px-4 py-2.5 text-sm text-rose-300 transition hover:bg-rose-500/10"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm text-rose-600 transition hover:bg-rose-100 dark:border-rose-500/20 dark:bg-rose-500/[0.06] dark:text-rose-300 dark:hover:bg-rose-500/10"
           >
             <XCircle size={16} />
             Exit interview
@@ -1024,23 +944,25 @@ export default function MockInterviewPage() {
 
         <div className="mb-6">
           <div className="mb-2 flex items-center justify-between text-xs">
-            <span className="text-slate-500">Interview progress</span>
+            <span className="text-zinc-500 dark:text-slate-500">
+              Interview progress
+            </span>
 
-            <span className="font-medium text-violet-300">{progress}%</span>
+            <span className="font-medium text-violet-600 dark:text-violet-300">
+              {progress}%
+            </span>
           </div>
 
-          <div className="h-2 overflow-hidden rounded-full bg-white/[0.07]">
+          <div className="h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-white/[0.07]">
             <div
               className="h-full rounded-full bg-violet-500 transition-all"
-              style={{
-                width: `${progress}%`,
-              }}
+              style={{ width: `${progress}%` }}
             />
           </div>
         </div>
 
         {message && (
-          <div className="mb-5 rounded-xl border border-amber-500/20 bg-amber-500/[0.08] px-4 py-3 text-sm text-amber-200">
+          <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/[0.08] dark:text-amber-200">
             {message}
           </div>
         )}
@@ -1048,43 +970,45 @@ export default function MockInterviewPage() {
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
           {/* QUESTION */}
 
-          <section className="rounded-2xl border border-white/[0.08] bg-[#111624] p-5 sm:p-7">
+          <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-white/[0.08] dark:bg-[#111624] dark:shadow-none sm:p-7">
             <div className="mb-5 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-slate-500">
                   Question {String(currentIndex + 1).padStart(2, "0")}
                 </span>
 
                 {currentQuestion.source === "ai" && (
-                  <span className="inline-flex items-center gap-1 rounded-md border border-violet-500/20 bg-violet-500/10 px-2 py-1 text-[11px] text-violet-300">
+                  <span className="inline-flex items-center gap-1 rounded-md border border-violet-200 bg-violet-50 px-2 py-1 text-[11px] text-violet-700 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300">
                     <Sparkles size={10} />
                     AI
                   </span>
                 )}
 
                 {currentQuestion.source === "database" && (
-                  <span className="inline-flex items-center gap-1 rounded-md border border-sky-500/20 bg-sky-500/10 px-2 py-1 text-[11px] text-sky-300">
+                  <span className="inline-flex items-center gap-1 rounded-md border border-sky-200 bg-sky-50 px-2 py-1 text-[11px] text-sky-700 dark:border-sky-500/20 dark:bg-sky-500/10 dark:text-sky-300">
                     <Database size={10} />
                     Question Bank
                   </span>
                 )}
               </div>
 
-              <span className="rounded-md border border-white/10 bg-white/[0.03] px-2 py-1 text-xs text-slate-400">
+              <span className="rounded-md border border-zinc-200 bg-zinc-50 px-2 py-1 text-xs text-zinc-600 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-400">
                 {currentQuestion.difficulty}
               </span>
             </div>
 
-            <h2 className="text-lg font-semibold leading-8 sm:text-xl">
+            <h2 className="text-lg font-semibold leading-8 text-zinc-900 dark:text-white sm:text-xl">
               {currentQuestion.question}
             </h2>
 
-            <p className="mt-2 text-sm text-slate-500">
+            <p className="mt-2 text-sm text-zinc-500 dark:text-slate-500">
               {currentQuestion.topic}
             </p>
 
+            {/* ANSWER */}
+
             <div className="mt-7">
-              <label className="mb-2 block text-sm font-medium text-slate-300">
+              <label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-slate-300">
                 Your answer
               </label>
 
@@ -1094,56 +1018,60 @@ export default function MockInterviewPage() {
                 onChange={(event) => setAnswer(event.target.value)}
                 rows={10}
                 placeholder="Answer as you would in a real interview..."
-                className="w-full resize-none rounded-xl border border-white/10 bg-[#090d17] px-4 py-4 text-sm leading-7 text-slate-200 outline-none placeholder:text-slate-600 focus:border-violet-500/50 disabled:cursor-not-allowed disabled:opacity-70"
+                className="w-full resize-none rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-4 text-sm leading-7 text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-violet-500/50 disabled:cursor-not-allowed disabled:opacity-70 dark:border-white/10 dark:bg-[#090d17] dark:text-slate-200 dark:placeholder:text-slate-600"
               />
 
-              <div className="mt-2 flex justify-between text-xs text-slate-600">
+              <div className="mt-2 flex justify-between text-xs text-zinc-500 dark:text-slate-600">
                 <span>Explain your answer clearly and practically.</span>
 
                 <span>{answer.trim().length} characters</span>
               </div>
             </div>
 
-            {showEvaluation && evaluation && (
-              <div className="mt-6 space-y-4 border-t border-white/[0.07] pt-6">
-                {/* HEADER */}
+            {/* EVALUATION */}
 
+            {showEvaluation && evaluation && (
+              <div className="mt-6 space-y-4 border-t border-zinc-200 pt-6 dark:border-white/[0.07]">
                 <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                   <div>
                     <div className="flex items-center gap-2">
-                      <Sparkles size={18} className="text-violet-300" />
+                      <Sparkles
+                        size={18}
+                        className="text-violet-600 dark:text-violet-300"
+                      />
 
-                      <h3 className="font-semibold">AI Evaluation</h3>
+                      <h3 className="font-semibold text-zinc-900 dark:text-white">
+                        AI Evaluation
+                      </h3>
                     </div>
 
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-zinc-500 dark:text-slate-500">
                       Evaluation of your interview answer
                     </p>
                   </div>
 
-                  {/* SCORE */}
-
                   {evaluationSuccessful && (
-                    <div className="flex items-center gap-2 rounded-xl border border-violet-500/20 bg-violet-500/10 px-4 py-2">
-                      <span className="text-xs text-slate-400">Score</span>
+                    <div className="flex items-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-2 dark:border-violet-500/20 dark:bg-violet-500/10">
+                      <span className="text-xs text-zinc-500 dark:text-slate-400">
+                        Score
+                      </span>
 
-                      <span className="text-xl font-bold text-violet-300">
-                        {evaluation.score}
-                        /10
+                      <span className="text-xl font-bold text-violet-600 dark:text-violet-300">
+                        {evaluation.score}/10
                       </span>
                     </div>
                   )}
                 </div>
 
-                {/* AI FAILED */}
+                {/* FAILED */}
 
                 {!evaluationSuccessful && (
-                  <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.07] p-4">
-                    <p className="text-sm font-medium text-amber-300">
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/20 dark:bg-amber-500/[0.07]">
+                    <p className="text-sm font-medium text-amber-700 dark:text-amber-300">
                       Evaluation unavailable
                     </p>
 
-                    <p className="mt-1 text-sm leading-6 text-slate-400">
+                    <p className="mt-1 text-sm leading-6 text-zinc-600 dark:text-slate-400">
                       Your answer has been saved successfully. You can continue
                       with the interview.
                     </p>
@@ -1153,12 +1081,12 @@ export default function MockInterviewPage() {
                 {/* FEEDBACK */}
 
                 {evaluationSuccessful && evaluation.feedback && (
-                  <div className="rounded-xl border border-violet-500/15 bg-violet-500/[0.05] p-4">
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-violet-300">
+                  <div className="rounded-xl border border-violet-200 bg-violet-50 p-4 dark:border-violet-500/15 dark:bg-violet-500/[0.05]">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-violet-700 dark:text-violet-300">
                       Feedback
                     </p>
 
-                    <p className="text-sm leading-7 text-slate-300">
+                    <p className="text-sm leading-7 text-zinc-700 dark:text-slate-300">
                       {evaluation.feedback}
                     </p>
                   </div>
@@ -1167,11 +1095,14 @@ export default function MockInterviewPage() {
                 {/* STRENGTHS */}
 
                 {evaluationSuccessful && evaluation.strengths.length > 0 && (
-                  <div className="rounded-xl border border-emerald-500/15 bg-emerald-500/[0.05] p-4">
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-500/15 dark:bg-emerald-500/[0.05]">
                     <div className="mb-3 flex items-center gap-2">
-                      <CheckCircle2 size={16} className="text-emerald-300" />
+                      <CheckCircle2
+                        size={16}
+                        className="text-emerald-600 dark:text-emerald-300"
+                      />
 
-                      <p className="text-xs font-semibold uppercase tracking-wider text-emerald-300">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
                         Strengths
                       </p>
                     </div>
@@ -1180,9 +1111,11 @@ export default function MockInterviewPage() {
                       {evaluation.strengths.map((strength, index) => (
                         <div
                           key={index}
-                          className="flex gap-2 text-sm leading-6 text-slate-300"
+                          className="flex gap-2 text-sm leading-6 text-zinc-700 dark:text-slate-300"
                         >
-                          <span className="text-emerald-400">•</span>
+                          <span className="text-emerald-500 dark:text-emerald-400">
+                            •
+                          </span>
 
                           <span>{strength}</span>
                         </div>
@@ -1194,11 +1127,14 @@ export default function MockInterviewPage() {
                 {/* IMPROVEMENTS */}
 
                 {evaluationSuccessful && evaluation.improvements.length > 0 && (
-                  <div className="rounded-xl border border-amber-500/15 bg-amber-500/[0.05] p-4">
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/15 dark:bg-amber-500/[0.05]">
                     <div className="mb-3 flex items-center gap-2">
-                      <Target size={16} className="text-amber-300" />
+                      <Target
+                        size={16}
+                        className="text-amber-600 dark:text-amber-300"
+                      />
 
-                      <p className="text-xs font-semibold uppercase tracking-wider text-amber-300">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-300">
                         Areas to Improve
                       </p>
                     </div>
@@ -1207,9 +1143,11 @@ export default function MockInterviewPage() {
                       {evaluation.improvements.map((improvement, index) => (
                         <div
                           key={index}
-                          className="flex gap-2 text-sm leading-6 text-slate-300"
+                          className="flex gap-2 text-sm leading-6 text-zinc-700 dark:text-slate-300"
                         >
-                          <span className="text-amber-400">•</span>
+                          <span className="text-amber-500 dark:text-amber-400">
+                            •
+                          </span>
 
                           <span>{improvement}</span>
                         </div>
@@ -1221,16 +1159,19 @@ export default function MockInterviewPage() {
                 {/* BETTER ANSWER */}
 
                 {evaluationSuccessful && evaluation.betterAnswer && (
-                  <div className="rounded-xl border border-sky-500/15 bg-sky-500/[0.05] p-4">
+                  <div className="rounded-xl border border-sky-200 bg-sky-50 p-4 dark:border-sky-500/15 dark:bg-sky-500/[0.05]">
                     <div className="mb-3 flex items-center gap-2">
-                      <MessageSquareText size={16} className="text-sky-300" />
+                      <MessageSquareText
+                        size={16}
+                        className="text-sky-600 dark:text-sky-300"
+                      />
 
-                      <p className="text-xs font-semibold uppercase tracking-wider text-sky-300">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-sky-700 dark:text-sky-300">
                         Better Interview Answer
                       </p>
                     </div>
 
-                    <p className="whitespace-pre-line text-sm leading-7 text-slate-300">
+                    <p className="whitespace-pre-line text-sm leading-7 text-zinc-700 dark:text-slate-300">
                       {evaluation.betterAnswer}
                     </p>
                   </div>
@@ -1242,12 +1183,12 @@ export default function MockInterviewPage() {
 
             {/* NAVIGATION */}
 
-            <div className="mt-6 flex flex-col-reverse justify-between gap-3 border-t border-white/[0.07] pt-5 sm:flex-row">
+            <div className="mt-6 flex flex-col-reverse justify-between gap-3 border-t border-zinc-200 pt-5 dark:border-white/[0.07] sm:flex-row">
               <button
                 type="button"
                 onClick={handlePrevious}
                 disabled={currentIndex === 0 || isSubmitting || isCompleting}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 px-4 py-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/[0.04]"
               >
                 <ArrowLeft size={17} />
                 Previous
@@ -1292,31 +1233,30 @@ export default function MockInterviewPage() {
           {/* SIDE */}
 
           <aside className="space-y-4">
-            <div className="rounded-2xl border border-white/[0.08] bg-[#111624] p-5">
-              <h3 className="font-semibold">Interview details</h3>
+            <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-white/[0.08] dark:bg-[#111624] dark:shadow-none">
+              <h3 className="font-semibold text-zinc-900 dark:text-white">
+                Interview details
+              </h3>
 
               <div className="mt-4 space-y-4">
                 <Detail label="Technology" value={interview.technology} />
-
                 <Detail label="Topic" value={interview.topic} />
-
                 <Detail label="Difficulty" value={interview.difficulty} />
-
                 <Detail label="Experience" value={interview.experience} />
-
                 <Detail label="Questions" value={String(total)} />
               </div>
             </div>
 
             {/* QUESTION NAV */}
 
-            <div className="rounded-2xl border border-white/[0.08] bg-[#111624] p-5">
-              <h3 className="font-semibold">Questions</h3>
+            <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-white/[0.08] dark:bg-[#111624] dark:shadow-none">
+              <h3 className="font-semibold text-zinc-900 dark:text-white">
+                Questions
+              </h3>
 
               <div className="mt-4 grid grid-cols-5 gap-2">
                 {interview.questions.map((item, index) => {
                   const answered = Boolean(item.userAnswer?.trim());
-
                   const active = index === currentIndex;
 
                   return (
@@ -1326,10 +1266,10 @@ export default function MockInterviewPage() {
                       onClick={() => openQuestion(index)}
                       className={`flex h-10 items-center justify-center rounded-lg border text-xs font-semibold transition ${
                         active
-                          ? "border-violet-500 bg-violet-500/15 text-violet-200"
+                          ? "border-violet-500 bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-200"
                           : answered
-                          ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
-                          : "border-white/10 bg-white/[0.03] text-slate-500"
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300"
+                          : "border-zinc-200 bg-zinc-50 text-zinc-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-slate-500"
                       }`}
                     >
                       {index + 1}
@@ -1338,7 +1278,7 @@ export default function MockInterviewPage() {
                 })}
               </div>
 
-              <div className="mt-4 flex items-center gap-4 text-[11px] text-slate-500">
+              <div className="mt-4 flex items-center gap-4 text-[11px] text-zinc-500 dark:text-slate-500">
                 <span className="flex items-center gap-1">
                   <span className="h-2 w-2 rounded-full bg-emerald-400" />
                   Answered
@@ -1351,12 +1291,19 @@ export default function MockInterviewPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-sky-500/15 bg-sky-500/[0.05] p-5">
-              <MessageSquareText size={19} className="text-sky-300" />
+            {/* TIP */}
 
-              <p className="mt-3 text-sm font-medium">Interview tip</p>
+            <div className="rounded-2xl border border-sky-200 bg-sky-50 p-5 dark:border-sky-500/15 dark:bg-sky-500/[0.05]">
+              <MessageSquareText
+                size={19}
+                className="text-sky-600 dark:text-sky-300"
+              />
 
-              <p className="mt-1 text-xs leading-5 text-slate-400">
+              <p className="mt-3 text-sm font-medium text-zinc-900 dark:text-white">
+                Interview tip
+              </p>
+
+              <p className="mt-1 text-xs leading-5 text-zinc-600 dark:text-slate-400">
                 Answer like you are speaking to an interviewer. Give the
                 definition, explain how it works, then add a practical example.
               </p>
@@ -1367,7 +1314,9 @@ export default function MockInterviewPage() {
     );
   };
 
-  //  RESULT SCREEN
+  /* =====================================================
+     RESULT SCREEN
+  ===================================================== */
 
   const renderResult = () => {
     if (!interview) {
@@ -1381,13 +1330,17 @@ export default function MockInterviewPage() {
     return (
       <div className="mx-auto max-w-4xl">
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-500/15 text-violet-300">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300">
             <Trophy size={30} />
           </div>
 
-          <h1 className="text-3xl font-bold">Interview completed</h1>
+          <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">
+            Interview completed
+          </h1>
 
-          <p className="mt-2 text-slate-400">{interview.title}</p>
+          <p className="mt-2 text-zinc-600 dark:text-slate-400">
+            {interview.title}
+          </p>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
@@ -1401,41 +1354,49 @@ export default function MockInterviewPage() {
           <ResultStat title="Score" value={`${interview.percentage}%`} />
         </div>
 
-        <div className="mt-6 rounded-2xl border border-white/[0.08] bg-[#111624] p-5 sm:p-6">
-          <h2 className="text-lg font-semibold">Interview summary</h2>
+        {/* SUMMARY */}
+
+        <div className="mt-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-white/[0.08] dark:bg-[#111624] dark:shadow-none sm:p-6">
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
+            Interview summary
+          </h2>
 
           <div className="mt-5 space-y-4">
             {interview.questions.map((question, index) => (
               <div
                 key={question._id}
-                className="rounded-xl border border-white/[0.07] bg-[#0b0f19] p-4"
+                className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-white/[0.07] dark:bg-[#0b0f19]"
               >
                 <div className="flex items-start gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-500/10 text-xs font-bold text-violet-300">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-xs font-bold text-violet-700 dark:bg-violet-500/10 dark:text-violet-300">
                     {index + 1}
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium leading-6">
+                    <p className="text-sm font-medium leading-6 text-zinc-900 dark:text-white">
                       {question.question}
                     </p>
 
-                    <div className="mt-3 rounded-lg bg-white/[0.03] p-3">
-                      <p className="mb-1 text-xs font-medium text-slate-500">
+                    {/* USER ANSWER */}
+
+                    <div className="mt-3 rounded-lg bg-white p-3 dark:bg-white/[0.03]">
+                      <p className="mb-1 text-xs font-medium text-zinc-500 dark:text-slate-500">
                         Your answer
                       </p>
 
-                      <p className="text-sm leading-6 text-slate-300">
+                      <p className="text-sm leading-6 text-zinc-700 dark:text-slate-300">
                         {question.userAnswer || "Not answered"}
                       </p>
                     </div>
 
                     {/* SCORE */}
 
-                    <div className="mt-3 flex items-center justify-between rounded-lg border border-white/[0.07] bg-white/[0.03] p-3">
-                      <span className="text-xs text-slate-500">AI Score</span>
+                    <div className="mt-3 flex items-center justify-between rounded-lg border border-zinc-200 bg-white p-3 dark:border-white/[0.07] dark:bg-white/[0.03]">
+                      <span className="text-xs text-zinc-500 dark:text-slate-500">
+                        AI Score
+                      </span>
 
-                      <span className="text-lg font-bold text-violet-300">
+                      <span className="text-lg font-bold text-violet-600 dark:text-violet-300">
                         {question.score ?? 0}/10
                       </span>
                     </div>
@@ -1443,12 +1404,12 @@ export default function MockInterviewPage() {
                     {/* FEEDBACK */}
 
                     {question.feedback && (
-                      <div className="mt-3 rounded-lg border border-violet-500/15 bg-violet-500/[0.05] p-3">
-                        <p className="mb-1 text-xs font-medium text-violet-300">
+                      <div className="mt-3 rounded-lg border border-violet-200 bg-violet-50 p-3 dark:border-violet-500/15 dark:bg-violet-500/[0.05]">
+                        <p className="mb-1 text-xs font-medium text-violet-700 dark:text-violet-300">
                           AI Feedback
                         </p>
 
-                        <p className="text-sm leading-6 text-slate-300">
+                        <p className="text-sm leading-6 text-zinc-700 dark:text-slate-300">
                           {question.feedback}
                         </p>
                       </div>
@@ -1457,8 +1418,8 @@ export default function MockInterviewPage() {
                     {/* STRENGTHS */}
 
                     {question.strengths && question.strengths.length > 0 && (
-                      <div className="mt-3 rounded-lg border border-emerald-500/15 bg-emerald-500/[0.05] p-3">
-                        <p className="mb-2 text-xs font-medium text-emerald-300">
+                      <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-500/15 dark:bg-emerald-500/[0.05]">
+                        <p className="mb-2 text-xs font-medium text-emerald-700 dark:text-emerald-300">
                           Strengths
                         </p>
 
@@ -1466,7 +1427,7 @@ export default function MockInterviewPage() {
                           {question.strengths.map((strength, strengthIndex) => (
                             <li
                               key={strengthIndex}
-                              className="text-sm text-slate-300"
+                              className="text-sm text-zinc-700 dark:text-slate-300"
                             >
                               • {strength}
                             </li>
@@ -1479,8 +1440,8 @@ export default function MockInterviewPage() {
 
                     {question.improvements &&
                       question.improvements.length > 0 && (
-                        <div className="mt-3 rounded-lg border border-amber-500/15 bg-amber-500/[0.05] p-3">
-                          <p className="mb-2 text-xs font-medium text-amber-300">
+                        <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-500/15 dark:bg-amber-500/[0.05]">
+                          <p className="mb-2 text-xs font-medium text-amber-700 dark:text-amber-300">
                             Areas to improve
                           </p>
 
@@ -1489,7 +1450,7 @@ export default function MockInterviewPage() {
                               (improvement, improvementIndex) => (
                                 <li
                                   key={improvementIndex}
-                                  className="text-sm text-slate-300"
+                                  className="text-sm text-zinc-700 dark:text-slate-300"
                                 >
                                   • {improvement}
                                 </li>
@@ -1502,12 +1463,12 @@ export default function MockInterviewPage() {
                     {/* BETTER ANSWER */}
 
                     {question.betterAnswer && (
-                      <div className="mt-3 rounded-lg border border-sky-500/15 bg-sky-500/[0.05] p-3">
-                        <p className="mb-2 text-xs font-medium text-sky-300">
+                      <div className="mt-3 rounded-lg border border-sky-200 bg-sky-50 p-3 dark:border-sky-500/15 dark:bg-sky-500/[0.05]">
+                        <p className="mb-2 text-xs font-medium text-sky-700 dark:text-sky-300">
                           Better Interview Answer
                         </p>
 
-                        <p className="text-sm leading-6 text-slate-300">
+                        <p className="whitespace-pre-line text-sm leading-6 text-zinc-700 dark:text-slate-300">
                           {question.betterAnswer}
                         </p>
                       </div>
@@ -1530,7 +1491,7 @@ export default function MockInterviewPage() {
           </button>
         </div>
 
-        <div className="mt-5 rounded-xl border border-amber-500/15 bg-amber-500/[0.05] px-4 py-3 text-center text-xs leading-5 text-amber-200">
+        <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-center text-xs leading-5 text-amber-700 dark:border-amber-500/15 dark:bg-amber-500/[0.05] dark:text-amber-200">
           AI answer evaluation is not connected yet, so the score will remain 0
           until we add the evaluation API.
         </div>
@@ -1538,9 +1499,13 @@ export default function MockInterviewPage() {
     );
   };
 
+  /* =====================================================
+     MAIN
+  ===================================================== */
+
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-[#080b14] text-slate-100">
+      <div className="min-h-screen bg-zinc-50 text-zinc-900 transition-colors dark:bg-[#080b14] dark:text-slate-100">
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         <div className="min-h-screen lg:pl-64">
@@ -1559,7 +1524,9 @@ export default function MockInterviewPage() {
   );
 }
 
-//  SMALL COMPONENTS
+/* =========================================================
+   SMALL COMPONENTS
+========================================================= */
 
 function SelectField({
   label,
@@ -1568,26 +1535,27 @@ function SelectField({
   onChange,
 }: {
   label: string;
-
   value: string;
-
   options: string[];
-
   onChange: (value: string) => void;
 }) {
   return (
     <label>
-      <span className="mb-2 block text-xs font-medium text-slate-400">
+      <span className="mb-2 block text-xs font-medium text-zinc-600 dark:text-slate-400">
         {label}
       </span>
 
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-xl border border-white/10 bg-[#090d17] px-3 py-3 text-sm text-slate-300 outline-none focus:border-violet-500/50"
+        className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-3 text-sm text-zinc-800 outline-none transition focus:border-violet-500/50 dark:border-white/10 dark:bg-[#090d17] dark:text-slate-300"
       >
         {options.map((option) => (
-          <option key={option} value={option} className="bg-[#111624]">
+          <option
+            key={option}
+            value={option}
+            className="bg-white text-zinc-900 dark:bg-[#111624] dark:text-slate-200"
+          >
             {option}
           </option>
         ))}
@@ -1602,20 +1570,20 @@ function StatCard({
   icon: Icon,
 }: {
   title: string;
-
   value: string | number;
-
   icon: React.ElementType;
 }) {
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-[#111624] p-4">
-      <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/10 text-violet-300">
+    <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/[0.08] dark:bg-[#111624] dark:shadow-none">
+      <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100 text-violet-600 dark:bg-violet-500/10 dark:text-violet-300">
         <Icon size={19} />
       </div>
 
-      <p className="text-2xl font-bold">{value}</p>
+      <p className="text-2xl font-bold text-zinc-900 dark:text-white">
+        {value}
+      </p>
 
-      <p className="mt-1 text-xs text-slate-500">{title}</p>
+      <p className="mt-1 text-xs text-zinc-500 dark:text-slate-500">{title}</p>
     </div>
   );
 }
@@ -1626,65 +1594,55 @@ function FlowItem({
   description,
 }: {
   number: string;
-
   title: string;
-
   description: string;
 }) {
   return (
     <div className="flex gap-3">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-500/10 text-xs font-bold text-violet-300">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-xs font-bold text-violet-700 dark:bg-violet-500/10 dark:text-violet-300">
         {number}
       </div>
 
       <div>
-        <p className="text-sm font-medium">{title}</p>
+        <p className="text-sm font-medium text-zinc-900 dark:text-white">
+          {title}
+        </p>
 
-        <p className="mt-1 text-xs leading-5 text-slate-500">{description}</p>
+        <p className="mt-1 text-xs leading-5 text-zinc-500 dark:text-slate-500">
+          {description}
+        </p>
       </div>
     </div>
   );
 }
 
-function Detail({
-  label,
-  value,
-}: {
-  label: string;
-
-  value: string;
-}) {
+function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <span className="text-xs text-slate-500">{label}</span>
+      <span className="text-xs text-zinc-500 dark:text-slate-500">{label}</span>
 
-      <span className="text-right text-sm font-medium text-slate-300">
+      <span className="text-right text-sm font-medium text-zinc-700 dark:text-slate-300">
         {value}
       </span>
     </div>
   );
 }
 
-function ResultStat({
-  title,
-  value,
-}: {
-  title: string;
-
-  value: string;
-}) {
+function ResultStat({ title, value }: { title: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-[#111624] p-5 text-center">
-      <p className="text-2xl font-bold text-violet-300">{value}</p>
+    <div className="rounded-2xl border border-zinc-200 bg-white p-5 text-center shadow-sm dark:border-white/[0.08] dark:bg-[#111624] dark:shadow-none">
+      <p className="text-2xl font-bold text-violet-600 dark:text-violet-300">
+        {value}
+      </p>
 
-      <p className="mt-1 text-xs text-slate-500">{title}</p>
+      <p className="mt-1 text-xs text-zinc-500 dark:text-slate-500">{title}</p>
     </div>
   );
 }
 
 function ErrorMessage({ message }: { message: string }) {
   return (
-    <div className="mt-4 rounded-xl border border-rose-500/20 bg-rose-500/[0.07] px-4 py-3 text-sm text-rose-300">
+    <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/[0.07] dark:text-rose-300">
       {message}
     </div>
   );
@@ -1697,10 +1655,10 @@ function StatusBadge({
 }) {
   const style =
     status === "completed"
-      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300"
       : status === "in_progress"
-      ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
-      : "border-rose-500/20 bg-rose-500/10 text-rose-300";
+      ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300"
+      : "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300";
 
   return (
     <span

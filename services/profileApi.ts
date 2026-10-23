@@ -1,6 +1,7 @@
 import {
     apiRequest,
   } from "@/lib/app";
+import { ResumeResponse } from "./resumeApi";
   
   export interface Profile {
     _id?: string;
@@ -9,7 +10,9 @@ import {
       _id: string;
       name: string;
       email: string;
+      profileImage: string;
     };
+    name?:string;
   
     phone?: string;
     location?: string;
@@ -41,6 +44,25 @@ import {
     portfolio?: string;
   }
 
+  export interface User {
+    name : string;
+    email: string;
+  }
+
+  interface UserResponse {
+    success: boolean;
+    message: string;
+    user: User;
+  }
+
+  export interface UpdateUserInput {
+    email?: string;
+    name?: string;
+    currentPassword?: string;
+    newPassword?: string;
+    isDeleted?:boolean;
+  }
+
   export interface Skill {
     userId?:string,
     skill?:string
@@ -69,6 +91,15 @@ import {
         }
       );
     };
+
+    export const updateUser = async (
+        data: UpdateUserInput
+      ): Promise<UserResponse> => {
+        return apiRequest<UserResponse>("/profile/user", {
+          method: "PUT",
+          body: JSON.stringify(data),
+        });
+      };
 
     export interface AddSkillResponse {
         success: boolean;
@@ -104,3 +135,35 @@ import {
           }
         );
       };
+
+      export interface UpdateProfileImageResponse {
+        success: boolean;
+        message: string;
+        profileImage: string;
+      }
+      
+      export const updateProfileImage = async (
+        formData: FormData
+      ): Promise<UpdateProfileImageResponse> => {
+        return apiRequest<UpdateProfileImageResponse>(
+          `/profile/image`,
+          {
+            method: "PUT",
+            body: formData,
+          }
+        );
+      };
+
+      export const uploadResume = async (
+        formData: FormData
+      ): Promise<ProfileResponse> => {
+        return apiRequest<ProfileResponse>(
+          "/profile/resume",
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+      };
+
+      

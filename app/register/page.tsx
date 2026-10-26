@@ -1,9 +1,11 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { UserPlus, Mail, Lock, User, Loader2 } from "lucide-react";
+
+import { GoogleLogin } from "@react-oauth/google";
 
 import { apiRequest, ApiResponse } from "../../lib/app";
 
@@ -18,9 +20,7 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const handleRegister = async (
-    e: FormEvent<HTMLFormElement>
-  ) => {
+  const handleRegister = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     setError("");
@@ -49,35 +49,78 @@ export default function RegisterPage() {
     try {
       setLoading(true);
 
-      const response = await apiRequest<ApiResponse>(
-        "/auth/register",
-        {
-          method: "POST",
+      const response = await apiRequest<ApiResponse>("/auth/register", {
+        method: "POST",
 
-          body: JSON.stringify({
-            name,
-            email,
-            password,
-          }),
-        }
-      );
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+        }),
+      });
 
-      setSuccess(
-        response.message ||
-          "Registration successful"
-      );
+      setSuccess(response.message || "Registration successful");
 
       setTimeout(() => {
         router.push("/login");
       }, 1000);
     } catch (error) {
+      setError(error instanceof Error ? error.message : "Registration failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  //  GOOGLE LOGIN
+
+  const handleGoogleRegister = async (credential?: string) => {
+    try {
+      setError("");
+      setSuccess("");
+
+      if (!credential) {
+        setError("Google credential was not returned");
+        return;
+      }
+
+      setLoading(true);
+
+      const response = await apiRequest<ApiResponse>("/auth/google", {
+        method: "POST",
+        body: JSON.stringify({
+          credential,
+        }),
+      });
+
+      if (!response.accessToken) {
+        throw new Error("Access token was not returned");
+      }
+
+      saveLoginData(response);
+
+      setSuccess(response.message || "Google registration successful");
+
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 500);
+    } catch (error) {
       setError(
-        error instanceof Error
-          ? error.message
-          : "Registration failed"
+        error instanceof Error ? error.message : "Google registration failed"
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  //  SAVE AUTH DATA
+
+  const saveLoginData = (response: ApiResponse) => {
+    if (response.accessToken) {
+      localStorage.setItem("accessToken", response.accessToken);
+    }
+
+    if (response.user) {
+      localStorage.setItem("user", JSON.stringify(response.user));
     }
   };
 
@@ -90,9 +133,7 @@ export default function RegisterPage() {
             <UserPlus className="h-7 w-7 text-violet-400" />
           </div>
 
-          <h1 className="text-3xl font-bold">
-            Create Account
-          </h1>
+          <h1 className="text-3xl font-bold">Create Account</h1>
 
           <p className="mt-2 text-sm text-zinc-400">
             Start building your career with SkillPrep AI
@@ -101,10 +142,7 @@ export default function RegisterPage() {
 
         {/* Card */}
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6 shadow-2xl">
-          <form
-            onSubmit={handleRegister}
-            className="space-y-5"
-          >
+          <form onSubmit={handleRegister} className="space-y-5">
             {/* Name */}
             <div>
               <label className="mb-2 block text-sm font-medium text-zinc-300">
@@ -117,9 +155,7 @@ export default function RegisterPage() {
                 <input
                   type="text"
                   value={name}
-                  onChange={(e) =>
-                    setName(e.target.value)
-                  }
+                  onChange={(e) => setName(e.target.value)}
                   placeholder="Enter your name"
                   className="w-full rounded-xl border border-zinc-700 bg-zinc-950 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-violet-500"
                 />
@@ -138,9 +174,7 @@ export default function RegisterPage() {
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) =>
-                    setEmail(e.target.value)
-                  }
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   className="w-full rounded-xl border border-zinc-700 bg-zinc-950 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-violet-500"
                 />
@@ -159,9 +193,7 @@ export default function RegisterPage() {
                 <input
                   type="password"
                   value={password}
-                  onChange={(e) =>
-                    setPassword(e.target.value)
-                  }
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="Minimum 6 characters"
                   className="w-full rounded-xl border border-zinc-700 bg-zinc-950 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-violet-500"
                 />
@@ -198,6 +230,40 @@ export default function RegisterPage() {
               )}
             </button>
           </form>
+
+          {/* ===============================
+              DIVIDER
+          =============================== */}
+
+          <div className="my-6 flex items-center gap-3">
+            <div className="h-px flex-1 bg-zinc-800" />
+
+            <span className="text-xs uppercase text-zinc-500">
+              Or continue with
+            </span>
+
+            <div className="h-px flex-1 bg-zinc-800" />
+          </div>
+
+          {/* ===============================
+              GOOGLE LOGIN
+          =============================== */}
+
+          <div className="flex justify-center">
+            <GoogleLogin
+              onSuccess={(credentialResponse) => {
+                handleGoogleRegister(credentialResponse.credential);
+              }}
+              onError={() => {
+                setError("Google registration failed. Please try again.");
+              }}
+              theme="filled_black"
+              shape="pill"
+              size="large"
+              text="continue_with"
+              width="380"
+            />
+          </div>
 
           {/* Login */}
           <div className="mt-6 border-t border-zinc-800 pt-6 text-center text-sm text-zinc-400">

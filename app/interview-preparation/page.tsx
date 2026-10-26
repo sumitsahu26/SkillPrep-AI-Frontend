@@ -972,8 +972,7 @@ export default function InterviewPreparationPage() {
             <div className="grid items-start gap-6 xl:grid-cols-[260px_minmax(0,1fr)]">
               {/* TECHNOLOGIES */}
 
-              <aside className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/[0.08] dark:bg-[#111624] dark:shadow-none sm:p-5">
-                <div className="mb-4 flex items-center justify-between">
+              <aside className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/[0.08] dark:bg-[#111624] dark:shadow-none sm:p-5 xl:sticky xl:top-[92px] xl:max-h-[calc(100vh-108px)] xl:overflow-y-auto">                <div className="mb-4 flex items-center justify-between">
                   <h2 className="font-semibold text-zinc-900 dark:text-white">
                     Technologies
                   </h2>
@@ -1065,8 +1064,7 @@ export default function InterviewPreparationPage() {
               <section className="min-w-0">
                 {/* FILTERS */}
 
-                <div className="mb-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/[0.08] dark:bg-[#111624] dark:shadow-none sm:p-5">
-                  <div className="flex flex-col gap-3 lg:flex-row">
+                <div className="sticky top-[76px] z-20 mb-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-white/[0.08] dark:bg-[#111624] dark:shadow-none sm:p-5 xl:top-[92px]">                  <div className="flex flex-col gap-3 lg:flex-row">
                     <label className="relative flex-1">
                       <Search
                         size={18}

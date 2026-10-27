@@ -1,23 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Lock,
-  ShieldCheck,
-  KeyRound,
-  Eye,
-  EyeOff,
-} from "lucide-react";
+import { Lock, ShieldCheck, KeyRound, Eye, EyeOff } from "lucide-react";
 
 import { updateUser, User } from "@/services/profileApi";
+import { toast } from "sonner";
 
 interface SecuritySettingsProps {
-    authProvider?: "local" | "google";
-  }
+  authProvider?: "local" | "google";
+}
 
-  export default function SecuritySettings({
-    authProvider = "local",
-  }: SecuritySettingsProps) {
+export default function SecuritySettings({
+  authProvider = "local",
+}: SecuritySettingsProps) {
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -27,25 +22,20 @@ interface SecuritySettingsProps {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
 
   const handleChangePassword = async () => {
-    setError("");
-    setMessage("");
-
     if (!currentPassword || !newPassword || !confirmPassword) {
-      setError("Please fill in all password fields.");
+      toast.error("Please fill in all password fields.");
       return;
     }
 
     if (newPassword.length < 8) {
-      setError("New password must be at least 8 characters.");
+      toast.error("New password must be at least 8 characters.");
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError("New passwords do not match.");
+      toast.error("New passwords do not match.");
       return;
     }
 
@@ -61,12 +51,10 @@ interface SecuritySettingsProps {
       setNewPassword("");
       setConfirmPassword("");
 
-      setMessage("Password changed successfully.");
+      toast.success("Password changed successfully.");
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to change password."
+      toast.error(
+        err instanceof Error ? err.message : "Failed to change password."
       );
     } finally {
       setSaving(false);
@@ -123,18 +111,6 @@ interface SecuritySettingsProps {
       </div>
 
       <div className="space-y-6 p-6">
-        {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-500/20 dark:bg-red-500/[0.06] dark:text-red-300">
-            {error}
-          </div>
-        )}
-
-        {message && (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/[0.06] dark:text-emerald-300">
-            {message}
-          </div>
-        )}
-
         <div>
           <div className="mb-5 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-100 text-violet-600 dark:bg-violet-500/10 dark:text-violet-300">

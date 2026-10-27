@@ -38,9 +38,7 @@ import {
   type AIDifficulty,
 } from "@/services/aiInterviewApi";
 
-/* =========================================================
-   DIFFICULTY
-========================================================= */
+  //  DIFFICULTY
 
 const difficultyStyles: Record<Difficulty, string> = {
   Easy: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300",
@@ -49,9 +47,7 @@ const difficultyStyles: Record<Difficulty, string> = {
   Hard: "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300",
 };
 
-/* =========================================================
-   AI TECHNOLOGIES
-========================================================= */
+  //  AI TECHNOLOGIES
 
 const aiTechnologyOptions = [
   "JavaScript",
@@ -68,9 +64,7 @@ const aiTechnologyOptions = [
   "System Design",
 ];
 
-/* =========================================================
-   AI TOPICS
-========================================================= */
+  //  AI TOPICS
 
 const aiTopicOptions: Record<string, string[]> = {
   JavaScript: [
@@ -209,9 +203,7 @@ const aiTopicOptions: Record<string, string[]> = {
   ],
 };
 
-/* =========================================================
-   FALLBACK
-========================================================= */
+  //  FALLBACK
 
 const fallbackQuestions: InterviewQuestion[] = [
   {
@@ -287,9 +279,7 @@ const fallbackQuestions: InterviewQuestion[] = [
   },
 ];
 
-/* =========================================================
-   PAGE
-========================================================= */
+  //  PAGE
 
 export default function InterviewPreparationPage() {
   const [technology, setTechnology] = useState("All technologies");
@@ -305,7 +295,6 @@ export default function InterviewPreparationPage() {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
 
   const [aiTechnology, setAiTechnology] = useState("Node.js");
   const [aiTopic, setAiTopic] = useState("General");
@@ -314,13 +303,9 @@ export default function InterviewPreparationPage() {
   const [aiQuestionCount, setAiQuestionCount] = useState(5);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiMessage, setAiMessage] = useState("");
-  const [aiMessageType, setAiMessageType] = useState<"success" | "error" | "">(
-    ""
-  );
+  const [aiMessageType, setAiMessageType] = useState<"success" | "error" | "">("");
 
-  /* =====================================================
-     LOAD DATA
-  ===================================================== */
+    //  LOAD DATA
 
   const loadQuestionBank = async () => {
     const response = await getInterviewQuestions();
@@ -337,7 +322,6 @@ export default function InterviewPreparationPage() {
     const loadData = async () => {
       try {
         setIsLoading(true);
-        setError("");
 
         try {
           await loadQuestionBank();
@@ -364,9 +348,7 @@ export default function InterviewPreparationPage() {
     loadData();
   }, []);
 
-  /* =====================================================
-     TECHNOLOGIES
-  ===================================================== */
+    //  TECHNOLOGIES
 
   const technologies = useMemo(() => {
     const categories = Array.from(
@@ -387,9 +369,7 @@ export default function InterviewPreparationPage() {
     ];
   }, [questions]);
 
-  /* =====================================================
-     TOPICS
-  ===================================================== */
+    //  TOPICS
 
   const topics = useMemo(() => {
     const relevant = questions.filter(
@@ -403,9 +383,7 @@ export default function InterviewPreparationPage() {
     ];
   }, [questions, technology]);
 
-  /* =====================================================
-     FILTER QUESTIONS
-  ===================================================== */
+    //  FILTER QUESTIONS
 
   const filteredQuestions = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -437,24 +415,18 @@ export default function InterviewPreparationPage() {
     });
   }, [questions, technology, difficulty, topic, search, saved, showSavedOnly]);
 
-  /* =====================================================
-     AI TECHNOLOGY
-  ===================================================== */
+    //  AI TECHNOLOGY
 
   const handleAITechnologyChange = (value: string) => {
     setAiTechnology(value);
     setAiTopic("General");
   };
 
-  /* =====================================================
-     FALLBACK CHECK
-  ===================================================== */
+    //  FALLBACK CHECK
 
   const isFallbackQuestion = (id: string) => id.startsWith("fallback-");
 
-  /* =====================================================
-     COMPLETED
-  ===================================================== */
+    //  COMPLETED
 
   const toggleCompleted = async (id: string) => {
     if (isFallbackQuestion(id)) {
@@ -478,9 +450,7 @@ export default function InterviewPreparationPage() {
     }
   };
 
-  /* =====================================================
-     BOOKMARK
-  ===================================================== */
+    //  BOOKMARK
 
   const toggleSaved = async (id: string) => {
     if (isFallbackQuestion(id)) {
@@ -504,9 +474,7 @@ export default function InterviewPreparationPage() {
     }
   };
 
-  /* =====================================================
-     AI GENERATION
-  ===================================================== */
+    //  AI GENERATION
 
   const handleGenerateAIQuestions = async () => {
     try {
@@ -576,9 +544,7 @@ export default function InterviewPreparationPage() {
     }
   };
 
-  /* =====================================================
-     RESET
-  ===================================================== */
+    //  RESET
 
   const resetFilters = () => {
     setTechnology("All technologies");
@@ -588,9 +554,7 @@ export default function InterviewPreparationPage() {
     setShowSavedOnly(false);
   };
 
-  /* =====================================================
-     PROGRESS
-  ===================================================== */
+    //  PROGRESS
 
   const databaseQuestionIds = useMemo(
     () =>
@@ -619,9 +583,7 @@ export default function InterviewPreparationPage() {
       ? Math.min(100, Math.round((completedCount / questions.length) * 100))
       : 0;
 
-  /* =====================================================
-     UI
-  ===================================================== */
+    //  UI
 
   return (
     <AuthGuard>
@@ -1152,12 +1114,6 @@ export default function InterviewPreparationPage() {
                     <p className="text-sm text-zinc-600 dark:text-slate-400">
                       Loading interview questions...
                     </p>
-                  </div>
-                )}
-
-                {error && (
-                  <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
-                    {error}
                   </div>
                 )}
 

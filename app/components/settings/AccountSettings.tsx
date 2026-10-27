@@ -10,6 +10,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { getProfile, updateUser, User } from "@/services/profileApi";
+import { toast } from "sonner";
 
 export default function AccountSettings() {
   const [user, setUser] = useState<User>({
@@ -19,14 +20,11 @@ export default function AccountSettings() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
 
   useEffect(() => {
     const loadProfile = async () => {
       try {
         setLoading(true);
-        setError("");
 
         const response = await getProfile();
 
@@ -37,7 +35,7 @@ export default function AccountSettings() {
       } catch (error) {
         console.error("Profile load error:", error);
 
-        setError(
+        toast.error(
           error instanceof Error
             ? error.message
             : "Failed to load profile"
@@ -59,21 +57,16 @@ export default function AccountSettings() {
       ...prev,
       [name]: value,
     }));
-
-    setMessage("");
-    setError("");
   };
 
   const handleSave = async () => {
     if (!user.name.trim()) {
-      setError("Name is required.");
+      toast.error("Name is required.");
       return;
     }
 
     try {
       setSaving(true);
-      setError("");
-      setMessage("");
 
       await updateUser({
         name: user.name.trim(),
@@ -85,11 +78,11 @@ export default function AccountSettings() {
         name: prev.name.trim(),
       }));
 
-      setMessage("Profile updated successfully.");
+      toast.success("Profile updated successfully.");
     } catch (error) {
       console.error("Profile update error:", error);
 
-      setError(
+      toast.error(
         error instanceof Error
           ? error.message
           : "Failed to update profile"
@@ -120,20 +113,6 @@ export default function AccountSettings() {
       </div>
 
       <div className="space-y-6 p-6">
-        {message && (
-          <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/[0.06] dark:text-emerald-300">
-            <CheckCircle2 size={16} />
-            {message}
-          </div>
-        )}
-
-        {error && (
-          <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-500/20 dark:bg-red-500/[0.05] dark:text-red-300">
-            <AlertCircle size={16} />
-            {error}
-          </div>
-        )}
-
         <div>
           <label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
             Full name

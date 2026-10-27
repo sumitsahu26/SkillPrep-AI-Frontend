@@ -29,10 +29,9 @@ import {
   toggleRoadmapTopic,
   type Roadmap,
 } from "@/services/roadmapApi";
+import { toast } from "sonner";
 
-/* =========================================================
-   OPTIONS
-========================================================= */
+  //  OPTIONS
 
 const roleOptions = [
   "Full Stack Developer",
@@ -55,9 +54,7 @@ const experienceOptions = [
 
 const durationOptions = [4, 6, 8, 10, 12];
 
-/* =========================================================
-   PAGE
-========================================================= */
+  //  PAGE
 
 export default function RoadmapPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -73,12 +70,9 @@ export default function RoadmapPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [updatingTopic, setUpdatingTopic] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  /* =====================================================
-     LOAD ROADMAPS
-  ===================================================== */
+    //  LOAD ROADMAPS
 
   const loadRoadmaps = async () => {
     try {
@@ -90,7 +84,7 @@ export default function RoadmapPage() {
     } catch (err) {
       console.error(err);
 
-      setError(err instanceof Error ? err.message : "Failed to load roadmaps");
+      toast.error(err instanceof Error ? err.message : "Failed to load roadmaps");
     } finally {
       setIsLoading(false);
     }
@@ -100,13 +94,11 @@ export default function RoadmapPage() {
     loadRoadmaps();
   }, []);
 
-  /* =====================================================
-     GENERATE
-  ===================================================== */
+    //  GENERATE
 
   const handleGenerate = async () => {
     try {
-      setError("");
+      
       setMessage("");
 
       const skills = skillsText
@@ -129,7 +121,7 @@ export default function RoadmapPage() {
 
       await loadRoadmaps();
     } catch (err) {
-      setError(
+      toast.error(
         err instanceof Error ? err.message : "Failed to generate roadmap"
       );
     } finally {
@@ -137,25 +129,21 @@ export default function RoadmapPage() {
     }
   };
 
-  /* =====================================================
-     OPEN ROADMAP
-  ===================================================== */
+    //  OPEN ROADMAP
 
   const handleOpen = async (id: string) => {
     try {
-      setError("");
+      
 
       const response = await getRoadmap(id);
 
       setRoadmap(response.roadmap);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to open roadmap");
+      toast.error(err instanceof Error ? err.message : "Failed to open roadmap");
     }
   };
 
-  /* =====================================================
-     TOGGLE TOPIC
-  ===================================================== */
+    //  TOGGLE TOPIC
 
   const handleToggleTopic = async (topicId: string) => {
     if (!roadmap) {
@@ -175,7 +163,7 @@ export default function RoadmapPage() {
         )
       );
     } catch (err) {
-      setError(
+      toast.error(
         err instanceof Error ? err.message : "Failed to update progress"
       );
     } finally {
@@ -183,9 +171,7 @@ export default function RoadmapPage() {
     }
   };
 
-  /* =====================================================
-     DELETE
-  ===================================================== */
+    //  DELETE
 
   const handleDelete = async (id: string) => {
     try {
@@ -199,15 +185,13 @@ export default function RoadmapPage() {
         setRoadmap(null);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete roadmap");
+      toast.error(err instanceof Error ? err.message : "Failed to delete roadmap");
     } finally {
       setDeletingId(null);
     }
   };
 
-  /* =====================================================
-     STATS
-  ===================================================== */
+    //  STATS
 
   const completedTopics = useMemo(() => {
     if (!roadmap) {
@@ -227,9 +211,7 @@ export default function RoadmapPage() {
     return roadmap.steps.reduce((total, step) => total + step.topics.length, 0);
   }, [roadmap]);
 
-  /* =====================================================
-     UI
-  ===================================================== */
+    //  UI
 
   return (
     <AuthGuard>
@@ -271,12 +253,6 @@ export default function RoadmapPage() {
                 </button>
               )}
             </div>
-
-            {error && (
-              <div className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600 dark:border-red-500/20 dark:bg-red-500/[0.06] dark:text-red-300">
-                {error}
-              </div>
-            )}
 
             {message && (
               <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-600 dark:border-emerald-500/20 dark:bg-emerald-500/[0.06] dark:text-emerald-300">
@@ -714,9 +690,7 @@ export default function RoadmapPage() {
   );
 }
 
-/* =========================================================
-   SMALL COMPONENTS
-========================================================= */
+  //  SMALL COMPONENTS
 
 function SelectField({
   label,

@@ -8,6 +8,7 @@ import { Mail, Lock, LogIn, Loader2 } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
 
 import { apiRequest, ApiResponse } from "../../lib/app";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,22 +17,19 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
-    //  NORMAL LOGIN
+  //  NORMAL LOGIN
 
   const handleLogin = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    setError("");
-
     if (!email.trim()) {
-      setError("Email is required");
+      toast.error("Email is required");
       return;
     }
 
     if (!password) {
-      setError("Password is required");
+      toast.error("Password is required");
       return;
     }
 
@@ -53,22 +51,24 @@ export default function LoginPage() {
 
       saveLoginData(response);
 
+      toast.success("Login Successfully");
+
       router.push("/dashboard");
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Login failed");
+      toast.error(error instanceof Error ? error.message : "Login failed");
     } finally {
       setLoading(false);
     }
   };
 
-    //  GOOGLE LOGIN
+  //  GOOGLE LOGIN
 
   const handleGoogleLogin = async (credential?: string) => {
     try {
-      setError("");
+      toast.error("");
 
       if (!credential) {
-        setError("Google credential was not returned");
+        toast.error("Google credential was not returned");
         return;
       }
 
@@ -90,13 +90,13 @@ export default function LoginPage() {
 
       router.push("/dashboard");
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Google login failed");
+      toast.error(error instanceof Error ? error.message : "Google login failed");
     } finally {
       setLoading(false);
     }
   };
 
-    //  SAVE AUTH DATA
+  //  SAVE AUTH DATA
 
   const saveLoginData = (response: ApiResponse) => {
     if (response.accessToken) {
@@ -169,12 +169,14 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Error */}
-            {error && (
-              <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-                {error}
-              </div>
-            )}
+            <div className="flex justify-end">
+              <Link
+                href="/forgot-password"
+                className="text-xs font-medium text-violet-400 transition hover:text-violet-300"
+              >
+                Forgot password?
+              </Link>
+            </div>
 
             {/* Login Button */}
             <button
@@ -217,7 +219,7 @@ export default function LoginPage() {
                 handleGoogleLogin(credentialResponse.credential);
               }}
               onError={() => {
-                setError("Google login failed. Please try again.");
+                toast.error("Google login failed. Please try again.");
               }}
               theme="filled_black"
               shape="pill"

@@ -22,6 +22,7 @@ import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import AuthGuard from "../components/AuthGuard";
 import { createResume, getResume, updateResume } from "@/services/resumeApi";
+import { toast } from "sonner";
 
 type Experience = {
   id: string;
@@ -232,7 +233,6 @@ export function ResumeBuilderContent() {
 
   const [resumeId, setResumeId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState("");
   const resumePreviewRef = useRef<HTMLDivElement>(null);
 
   const searchParams = useSearchParams();
@@ -311,7 +311,7 @@ export function ResumeBuilderContent() {
         }
       } catch (error) {
         console.error("Failed to load resume:", error);
-        setError("Failed to load resume");
+        toast.error("Failed to load resume");
       }
     };
 
@@ -444,7 +444,6 @@ export function ResumeBuilderContent() {
   const saveDraft = async () => {
     try {
       setIsSaving(true);
-      setError("");
       setSaved(false);
 
       const backendResume = convertToBackendResume(resume);
@@ -478,7 +477,7 @@ export function ResumeBuilderContent() {
     } catch (error) {
       console.error("Save resume error:", error);
 
-      setError(
+      toast.error(
         error instanceof Error ? error.message : "Failed to save resume"
       );
     } finally {
@@ -598,12 +597,6 @@ export function ResumeBuilderContent() {
                 </button>
               </div>
             </div>
-            {error && (
-              <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-400/20 dark:bg-red-500/10 dark:text-red-300">
-                {error}
-              </div>
-            )}
-
             <div
               className={`grid items-start gap-6 ${
                 showPreview

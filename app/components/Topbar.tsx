@@ -32,6 +32,7 @@ import Link from "next/link";
 
 import { getProfile, type Profile } from "@/services/profileApi";
 import { logout } from "@/lib/app";
+import { toast } from "sonner";
 
 interface TopbarProps {
   onMenuClick: () => void;
@@ -62,9 +63,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
     string | null
   >(null);
 
-  // =========================================================
   // LOAD PROFILE
-  // =========================================================
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -84,9 +83,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
     loadProfile();
   }, []);
 
-  // =========================================================
   // CLOSE DROPDOWNS WHEN CLICKING OUTSIDE
-  // =========================================================
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
@@ -111,9 +108,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
     };
   }, []);
 
-  // =========================================================
   // PROFILE DATA
-  // =========================================================
 
   const name = profile?.userId?.name || "My Profile";
 
@@ -121,9 +116,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
 
   const role = profile?.currentRole || "Developer";
 
-  // =========================================================
   // DARK / LIGHT MODE
-  // =========================================================
 
   const [darkMode, setDarkMode] = useState(true);
 
@@ -147,9 +140,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
     localStorage.setItem("theme", newDarkMode ? "dark" : "light");
   };
 
-  // =========================================================
   // LOAD NOTIFICATIONS
-  // =========================================================
 
   const loadNotifications = async () => {
     try {
@@ -175,9 +166,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
     loadNotifications();
   }, []);
 
-  // =========================================================
   // OPEN NOTIFICATION DROPDOWN
-  // =========================================================
 
   const handleNotificationToggle = async () => {
     const newState = !notificationOpen;
@@ -189,9 +178,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
     }
   };
 
-  // =========================================================
   // MARK SINGLE NOTIFICATION AS READ
-  // =========================================================
 
   const handleNotificationClick = async (notification: Notification) => {
     try {
@@ -226,9 +213,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
     }
   };
 
-  // =========================================================
   // MARK ALL NOTIFICATIONS AS READ
-  // =========================================================
 
   const handleMarkAllAsRead = async () => {
     if (unreadCount === 0) {
@@ -255,9 +240,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
     }
   };
 
-  // =========================================================
   // NOTIFICATION ICON
-  // =========================================================
 
   const getNotificationIcon = (type: Notification["type"]) => {
     switch (type) {
@@ -276,9 +259,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
     }
   };
 
-  // =========================================================
   // NOTIFICATION ICON STYLE
-  // =========================================================
 
   const getNotificationIconStyle = (type: Notification["type"]) => {
     switch (type) {
@@ -304,6 +285,8 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
 
       await deleteNotification(notification._id);
 
+      toast.success("Notification deleted")
+
       setNotifications((prev) =>
         prev.filter((item) => item._id !== notification._id)
       );
@@ -313,20 +296,18 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
       }
     } catch (error) {
       console.error("Failed to delete notification:", error);
+      toast.error("Failed to delete notification")
     } finally {
       setDeletingNotificationId(null);
     }
   };
 
-  // =========================================================
   // RENDER
-  // =========================================================
 
   return (
     <header className="sticky top-0 z-30 flex h-[76px] items-center justify-between border-b border-zinc-200 bg-white/90 px-4 backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#08090d]/90 sm:px-7">
-      {/* =====================================================
-          LEFT
-      ===================================================== */}
+      
+          {/* LEFT */}
 
       <div className="flex items-center gap-3">
         {/* MENU */}
@@ -364,14 +345,12 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
         </p>
       </div>
 
-      {/* =====================================================
-          RIGHT
-      ===================================================== */}
+      
+          {/* RIGHT */}
 
       <div className="flex items-center gap-3 sm:gap-5">
-        {/* ===================================================
-            NOTIFICATIONS
-        ==================================================== */}
+        
+            {/* NOTIFICATIONS */}
 
         <div ref={notificationRef} className="relative">
           <button
@@ -542,9 +521,8 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
 
         <div className="h-8 w-px bg-zinc-200 dark:bg-white/10" />
 
-        {/* ===================================================
-            PROFILE DROPDOWN
-        ==================================================== */}
+        
+            {/* PROFILE DROPDOWN */}
 
         <div ref={menuRef} className="relative">
           {/* PROFILE BUTTON */}
@@ -785,10 +763,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
     </header>
   );
 }
-
-// =========================================================
-// FORMAT NOTIFICATION DATE
-// =========================================================
+// FORMAT NOTIFICATION DAT
 
 function formatNotificationDate(date: string): string {
   const notificationDate = new Date(date);
@@ -831,10 +806,7 @@ function formatNotificationDate(date: string): string {
     year: "numeric",
   });
 }
-
-// =========================================================
-// INITIALS
-// =========================================================
+// INITIAL
 
 function getInitials(name: string) {
   if (!name || name === "My Profile") {

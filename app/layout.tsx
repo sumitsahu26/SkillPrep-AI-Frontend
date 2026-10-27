@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Toaster } from "sonner";
 
 import GoogleAuthProvider from "../app/components/GoogleAuthProvider";
 
@@ -19,6 +20,8 @@ export default function RootLayout({
       <body>
         <GoogleAuthProvider>
           {children}
+
+          <Toaster position="top-right" richColors closeButton />
         </GoogleAuthProvider>
       </body>
     </html>

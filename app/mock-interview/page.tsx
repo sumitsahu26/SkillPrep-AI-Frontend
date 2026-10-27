@@ -24,6 +24,7 @@ import {
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import AuthGuard from "../components/AuthGuard";
+import {toast} from "sonner"
 
 import {
   startMockInterview,
@@ -37,9 +38,7 @@ import {
   type MockAnswerEvaluation,
 } from "@/services/mockInterviewApi";
 
-/* =========================================================
-   TECHNOLOGIES
-========================================================= */
+  //  TECHNOLOGIES
 
 const technologyOptions = [
   "JavaScript",
@@ -56,9 +55,7 @@ const technologyOptions = [
   "System Design",
 ];
 
-/* =========================================================
-   TOPICS
-========================================================= */
+  //  TOPICS
 
 const topicOptions: Record<string, string[]> = {
   JavaScript: [
@@ -197,15 +194,11 @@ const topicOptions: Record<string, string[]> = {
   ],
 };
 
-/* =========================================================
-   PAGE STATE
-========================================================= */
+  //  PAGE STATE
 
 type PageMode = "setup" | "interview" | "result";
 
-/* =========================================================
-   PAGE
-========================================================= */
+  //  PAGE
 
 export default function MockInterviewPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -239,7 +232,6 @@ export default function MockInterviewPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
 
-  const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
   const [resumingId, setResumingId] = useState<string | null>(null);
@@ -253,9 +245,7 @@ export default function MockInterviewPage() {
   const [evaluationSuccessful, setEvaluationSuccessful] = useState(false);
   const [showEvaluation, setShowEvaluation] = useState(false);
 
-  /* =====================================================
-     LOAD HISTORY
-  ===================================================== */
+    //  LOAD HISTORY
 
   const loadHistory = async () => {
     try {
@@ -277,23 +267,17 @@ export default function MockInterviewPage() {
     loadHistory();
   }, []);
 
-  /* =====================================================
-     TOPICS
-  ===================================================== */
+    //  TOPICS
 
   const availableTopics = useMemo(() => {
     return topicOptions[technology] || ["General"];
   }, [technology]);
 
-  /* =====================================================
-     CURRENT QUESTION
-  ===================================================== */
+    //  CURRENT QUESTION
 
   const currentQuestion = interview?.questions?.[currentIndex];
 
-  /* =====================================================
-     OPEN QUESTION
-  ===================================================== */
+    //  OPEN QUESTION
 
   const openQuestion = (
     index: number,
@@ -311,7 +295,6 @@ export default function MockInterviewPage() {
 
     setCurrentIndex(index);
     setAnswer(question.userAnswer || "");
-    setError("");
 
     const hasEvaluation = Boolean(
       question.feedback ||
@@ -338,32 +321,25 @@ export default function MockInterviewPage() {
     }
   };
 
-  /* =====================================================
-     PROGRESS
-  ===================================================== */
+    //  PROGRESS
 
   const progress =
     interview && interview.questions.length > 0
       ? Math.round(((currentIndex + 1) / interview.questions.length) * 100)
       : 0;
 
-  /* =====================================================
-     TECHNOLOGY
-  ===================================================== */
+    //  TECHNOLOGY
 
   const handleTechnologyChange = (value: string) => {
     setTechnology(value);
     setTopic("General");
   };
 
-  /* =====================================================
-     START INTERVIEW
-  ===================================================== */
+    //  START INTERVIEW
 
   const handleStartInterview = async () => {
     try {
       setIsStarting(true);
-      setError("");
       setMessage("");
 
       const response = await startMockInterview({
@@ -375,7 +351,7 @@ export default function MockInterviewPage() {
       });
 
       if (!response.success) {
-        setError(response.message || "Failed to start interview");
+        toast.error(response.message || "Failed to start interview");
         return;
       }
 
@@ -393,7 +369,7 @@ export default function MockInterviewPage() {
     } catch (err) {
       console.error("Start mock interview:", err);
 
-      setError(
+      toast.error(
         err instanceof Error ? err.message : "Failed to start mock interview"
       );
     } finally {
@@ -401,9 +377,7 @@ export default function MockInterviewPage() {
     }
   };
 
-  /* =====================================================
-     SAVE ANSWER
-  ===================================================== */
+    //  SAVE ANSWER
 
   const saveCurrentAnswer = async () => {
     if (!interview || !currentQuestion) {
@@ -411,13 +385,12 @@ export default function MockInterviewPage() {
     }
 
     if (!answer.trim()) {
-      setError("Please enter your answer before continuing.");
+      toast.error("Please enter your answer before continuing.");
       return;
     }
 
     try {
       setIsSubmitting(true);
-      setError("");
       setEvaluation(null);
       setShowEvaluation(false);
 
@@ -428,7 +401,7 @@ export default function MockInterviewPage() {
       );
 
       if (!response.success) {
-        setError(response.message || "Failed to submit answer");
+        toast.error(response.message || "Failed to submit answer");
         return;
       }
 
@@ -439,15 +412,13 @@ export default function MockInterviewPage() {
     } catch (err) {
       console.error("Submit answer:", err);
 
-      setError(err instanceof Error ? err.message : "Failed to save answer");
+      toast.error(err instanceof Error ? err.message : "Failed to save answer");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  /* =====================================================
-     NEXT
-  ===================================================== */
+    //  NEXT
 
   const handleNext = async () => {
     if (!showEvaluation) {
@@ -469,9 +440,7 @@ export default function MockInterviewPage() {
     openQuestion(nextIndex);
   };
 
-  /* =====================================================
-     PREVIOUS
-  ===================================================== */
+    //  PREVIOUS
 
   const handlePrevious = () => {
     if (!interview || currentIndex === 0) {
@@ -481,9 +450,7 @@ export default function MockInterviewPage() {
     openQuestion(currentIndex - 1);
   };
 
-  /* =====================================================
-     COMPLETE
-  ===================================================== */
+    //  COMPLETE
 
   const handleComplete = async (
     targetInterview: MockInterview | null = interview
@@ -494,7 +461,6 @@ export default function MockInterviewPage() {
 
     try {
       setIsCompleting(true);
-      setError("");
 
       const response = await completeMockInterview(targetInterview._id);
 
@@ -506,7 +472,7 @@ export default function MockInterviewPage() {
     } catch (err) {
       console.error("Complete interview:", err);
 
-      setError(
+      toast.error(
         err instanceof Error ? err.message : "Failed to complete interview"
       );
     } finally {
@@ -514,9 +480,7 @@ export default function MockInterviewPage() {
     }
   };
 
-  /* =====================================================
-     ABANDON
-  ===================================================== */
+    //  ABANDON
 
   const handleAbandon = async () => {
     if (!interview) {
@@ -536,15 +500,12 @@ export default function MockInterviewPage() {
     setEvaluationSuccessful(false);
     setShowEvaluation(false);
     setMode("setup");
-    setError("");
     setMessage("");
 
     await loadHistory();
   };
 
-  /* =====================================================
-     NEW INTERVIEW
-  ===================================================== */
+    //  NEW INTERVIEW
 
   const handleNewInterview = () => {
     setInterview(null);
@@ -553,32 +514,28 @@ export default function MockInterviewPage() {
     setEvaluation(null);
     setEvaluationSuccessful(false);
     setShowEvaluation(false);
-    setError("");
     setMessage("");
     setMode("setup");
   };
 
-  /* =====================================================
-     RESUME INTERVIEW
-  ===================================================== */
+    //  RESUME INTERVIEW
 
   const handleResumeInterview = async (interviewId: string) => {
     try {
       setResumingId(interviewId);
-      setError("");
       setMessage("");
 
       const response = await getMockInterview(interviewId);
 
       if (!response.success) {
-        setError(response.message || "Failed to load interview");
+        toast.error(response.message || "Failed to load interview");
         return;
       }
 
       const loadedInterview = response.interview;
 
       if (loadedInterview.status !== "in_progress") {
-        setError("This interview is no longer in progress.");
+        toast.error("This interview is no longer in progress.");
         return;
       }
 
@@ -594,7 +551,7 @@ export default function MockInterviewPage() {
     } catch (err) {
       console.error("Resume mock interview:", err);
 
-      setError(
+      toast.error(
         err instanceof Error ? err.message : "Failed to resume mock interview"
       );
     } finally {
@@ -602,9 +559,7 @@ export default function MockInterviewPage() {
     }
   };
 
-  /* =====================================================
-     SETUP SCREEN
-  ===================================================== */
+    //  SETUP SCREEN
 
   const renderSetup = () => (
     <>
@@ -732,8 +687,6 @@ export default function MockInterviewPage() {
               </div>
             </div>
           </div>
-
-          {error && <ErrorMessage message={error} />}
 
           <button
             type="button"
@@ -889,9 +842,7 @@ export default function MockInterviewPage() {
     </>
   );
 
-  /* =====================================================
-     INTERVIEW SCREEN
-  ===================================================== */
+    //  INTERVIEW SCREEN
 
   const renderInterview = () => {
     if (!interview || !currentQuestion) {
@@ -1179,7 +1130,6 @@ export default function MockInterviewPage() {
               </div>
             )}
 
-            {error && <ErrorMessage message={error} />}
 
             {/* NAVIGATION */}
 
@@ -1314,9 +1264,7 @@ export default function MockInterviewPage() {
     );
   };
 
-  /* =====================================================
-     RESULT SCREEN
-  ===================================================== */
+    //  RESULT SCREEN
 
   const renderResult = () => {
     if (!interview) {
@@ -1499,9 +1447,7 @@ export default function MockInterviewPage() {
     );
   };
 
-  /* =====================================================
-     MAIN
-  ===================================================== */
+    //  MAIN
 
   return (
     <AuthGuard>
@@ -1524,9 +1470,7 @@ export default function MockInterviewPage() {
   );
 }
 
-/* =========================================================
-   SMALL COMPONENTS
-========================================================= */
+  //  SMALL COMPONENTS
 
 function SelectField({
   label,

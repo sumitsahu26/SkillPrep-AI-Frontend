@@ -3,30 +3,29 @@
 import { useState } from "react";
 import { AlertTriangle, Trash2, X } from "lucide-react";
 import { updateUser } from "@/services/profileApi";
+import { toast } from "sonner";
 
 export default function DangerZone() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
-  const [error, setError] = useState("");
 
   const closeModal = () => {
     if (deleting) return;
 
     setShowConfirm(false);
     setConfirmText("");
-    setError("");
   };
 
   const handleDelete = async () => {
     if (confirmText !== "DELETE") {
-      setError("Please type DELETE to confirm.");
+      toast.error("Please type DELETE to confirm.");
       return;
     }
 
     try {
       setDeleting(true);
-      setError("");
+
 
       await updateUser({
         isDeleted: true,
@@ -45,7 +44,7 @@ export default function DangerZone() {
     } catch (err) {
       console.error("Delete account error:", err);
 
-      setError(
+      toast.error(
         err instanceof Error
           ? err.message
           : "Failed to delete account."
@@ -135,17 +134,11 @@ export default function DangerZone() {
                 disabled={deleting}
                 onChange={(e) => {
                   setConfirmText(e.target.value);
-                  setError("");
+            
                 }}
                 placeholder="DELETE"
                 className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none focus:border-red-400 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/10 dark:bg-[#090d17] dark:text-white dark:placeholder:text-zinc-600 dark:focus:border-red-500"
               />
-
-              {error && (
-                <p className="mt-2 text-xs text-red-600 dark:text-red-400">
-                  {error}
-                </p>
-              )}
             </div>
 
             <div className="mt-6 flex justify-end gap-3">

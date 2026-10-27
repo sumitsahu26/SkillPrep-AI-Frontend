@@ -8,6 +8,7 @@ import { UserPlus, Mail, Lock, User, Loader2 } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
 
 import { apiRequest, ApiResponse } from "../../lib/app";
+import { toast } from "sonner";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -17,32 +18,27 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   const handleRegister = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    setError("");
-    setSuccess("");
-
     if (!name.trim()) {
-      setError("Name is required");
+      toast.error("Name is required")
       return;
     }
 
     if (!email.trim()) {
-      setError("Email is required");
+      toast.error("Email is required")
       return;
     }
 
     if (!password) {
-      setError("Password is required");
+      toast.error("Password is required")
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+      toast.error("Password must be at least 6 characters");
       return;
     }
 
@@ -59,13 +55,17 @@ export default function RegisterPage() {
         }),
       });
 
-      setSuccess(response.message || "Registration successful");
+      toast.success(response.message || "Account created successfully");
 
       setTimeout(() => {
         router.push("/login");
       }, 1000);
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Registration failed");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Registration failed"
+      );
     } finally {
       setLoading(false);
     }
@@ -75,11 +75,9 @@ export default function RegisterPage() {
 
   const handleGoogleRegister = async (credential?: string) => {
     try {
-      setError("");
-      setSuccess("");
 
       if (!credential) {
-        setError("Google credential was not returned");
+        toast.error("Google credential was not returned");
         return;
       }
 
@@ -98,13 +96,13 @@ export default function RegisterPage() {
 
       saveLoginData(response);
 
-      setSuccess(response.message || "Google registration successful");
+      toast.success(response.message || "Google registration successful");
 
       setTimeout(() => {
         router.push("/dashboard");
       }, 500);
     } catch (error) {
-      setError(
+      toast.error(
         error instanceof Error ? error.message : "Google registration failed"
       );
     } finally {
@@ -200,20 +198,6 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Error */}
-            {error && (
-              <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-                {error}
-              </div>
-            )}
-
-            {/* Success */}
-            {success && (
-              <div className="rounded-lg border border-green-500/20 bg-green-500/10 px-4 py-3 text-sm text-green-400">
-                {success}
-              </div>
-            )}
-
             {/* Submit */}
             <button
               type="submit"
@@ -255,7 +239,7 @@ export default function RegisterPage() {
                 handleGoogleRegister(credentialResponse.credential);
               }}
               onError={() => {
-                setError("Google registration failed. Please try again.");
+                toast.error("Google registration failed. Please try again.");
               }}
               theme="filled_black"
               shape="pill"

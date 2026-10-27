@@ -9,6 +9,7 @@ import Topbar from "@/app/components/Topbar";
 import AuthGuard from "@/app/components/AuthGuard";
 
 import { getResumes, deleteResume, type BackendResume } from "@/services/resumeApi";
+import { toast } from "sonner";
 
 export default function ResumesPage() {
   const router = useRouter();
@@ -17,12 +18,10 @@ export default function ResumesPage() {
   const [resumes, setResumes] = useState<BackendResume[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [error, setError] = useState("");
 
   const loadResumes = async () => {
     try {
       setIsLoading(true);
-      setError("");
 
       const response = await getResumes();
 
@@ -32,7 +31,7 @@ export default function ResumesPage() {
     } catch (error) {
       console.error("Failed to load resumes:", error);
 
-      setError(
+      toast.error(
         error instanceof Error
           ? error.message
           : "Failed to load resumes"
@@ -66,7 +65,6 @@ export default function ResumesPage() {
 
     try {
       setDeletingId(id);
-      setError("");
 
       const response = await deleteResume(id);
 
@@ -86,7 +84,7 @@ export default function ResumesPage() {
     } catch (error) {
       console.error("Delete resume error:", error);
 
-      setError(
+      toast.error(
         error instanceof Error
           ? error.message
           : "Failed to delete resume"
@@ -133,13 +131,6 @@ export default function ResumesPage() {
                 Create New Resume
               </button>
             </div>
-
-            {/* Error */}
-            {error && (
-              <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-400/20 dark:bg-red-500/10 dark:text-red-300">
-                {error}
-              </div>
-            )}
 
             {/* Loading */}
             {isLoading ? (

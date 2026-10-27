@@ -21,6 +21,7 @@ import {
   getMentorHistory,
   sendMentorMessage,
 } from "@/services/aiMentorApi";
+import { toast } from "sonner";
 
 type Message = {
   id: string;
@@ -68,8 +69,6 @@ export default function AIMentorPage() {
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
 
   const [isSending, setIsSending] = useState(false);
-
-  const [error, setError] = useState("");
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -121,8 +120,6 @@ export default function AIMentorPage() {
 
     setInput("");
 
-    setError("");
-
     setIsSending(true);
 
     try {
@@ -138,7 +135,7 @@ export default function AIMentorPage() {
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to get AI response";
 
-      setError(message);
+      toast.error(message);
 
       setMessages((previous) => [
         ...previous,
@@ -155,7 +152,6 @@ export default function AIMentorPage() {
 
   const clearChat = async () => {
     try {
-      setError("");
 
       await clearMentorHistory();
 
@@ -167,7 +163,7 @@ export default function AIMentorPage() {
         },
       ]);
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Failed to clear chat");
+      toast.error(error instanceof Error ? error.message : "Failed to clear chat");
     }
   };
 
@@ -232,12 +228,6 @@ export default function AIMentorPage() {
                     </div>
                   </div>
                 </div>
-
-                {error && (
-                  <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-500/20 dark:bg-red-500/5 dark:text-red-300">
-                    {error}
-                  </div>
-                )}
 
                 {/* Messages */}
 

@@ -29,6 +29,7 @@ import {
   updateProfileImage,
   uploadResume,
 } from "../../services/profileApi";
+import { toast } from "sonner";
 
 interface ProfileForm {
   name: string;
@@ -69,7 +70,6 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const resumeInputRef = useRef<HTMLInputElement>(null);
@@ -102,7 +102,9 @@ export default function ProfilePage() {
           portfolio: data?.portfolio || "",
         });
       } catch (error) {
-        setError(error instanceof Error ? error.message : "Failed to load profile");
+        toast.error(
+          error instanceof Error ? error.message : "Failed to load profile"
+        );
       } finally {
         setLoading(false);
       }
@@ -129,7 +131,9 @@ export default function ProfilePage() {
       return;
     }
 
-    const exists = profile.skills.some((item) => item.toLowerCase() === skill.toLowerCase());
+    const exists = profile.skills.some(
+      (item) => item.toLowerCase() === skill.toLowerCase()
+    );
 
     if (exists) {
       setSkillInput("");
@@ -137,8 +141,6 @@ export default function ProfilePage() {
     }
 
     try {
-      setError("");
-
       const response = await addProfileSkill(skill);
 
       setProfile((previous) => ({
@@ -148,22 +150,26 @@ export default function ProfilePage() {
 
       setSkillInput("");
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Failed to add skill");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to add skill"
+      );
     }
   };
 
   const removeSkill = async (skill: string) => {
     try {
-      setError("");
-
       const response = await removeProfileSkill(skill);
 
       setProfile((previous) => ({
         ...previous,
-        skills: response.profile.skills ?? previous.skills.filter((item) => item !== skill),
+        skills:
+          response.profile.skills ??
+          previous.skills.filter((item) => item !== skill),
       }));
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Failed to remove skill");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to remove skill"
+      );
     }
   };
 
@@ -172,7 +178,7 @@ export default function ProfilePage() {
   const handleSave = async () => {
     try {
       setSaving(true);
-      setError("");
+
       setMessage("");
 
       await updateProfile({
@@ -190,13 +196,17 @@ export default function ProfilePage() {
 
       setMessage("Profile updated successfully.");
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Failed to update profile");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update profile"
+      );
     } finally {
       setSaving(false);
     }
   };
 
-  const handleProfileImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfileImageChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
 
     if (!file) {
@@ -204,18 +214,16 @@ export default function ProfilePage() {
     }
 
     if (!file.type.startsWith("image/")) {
-      setError("Please select a valid image.");
+      toast.error("Please select a valid image.");
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      setError("Profile image must be smaller than 5MB.");
+      toast.error("Profile image must be smaller than 5MB.");
       return;
     }
 
     try {
-      setError("");
-
       const formData = new FormData();
       formData.append("profileImage", file);
 
@@ -228,13 +236,19 @@ export default function ProfilePage() {
 
       setMessage("Profile picture updated successfully.");
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Failed to update profile picture");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update profile picture"
+      );
     } finally {
       event.target.value = "";
     }
   };
 
-  const handleResumeUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleResumeUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
 
     if (!file) {
@@ -248,18 +262,18 @@ export default function ProfilePage() {
     ];
 
     if (!allowedTypes.includes(file.type)) {
-      setError("Please upload a PDF, DOC, or DOCX resume.");
+      toast.error("Please upload a PDF, DOC, or DOCX resume.");
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      setError("Resume must be smaller than 10MB.");
+      toast.error("Resume must be smaller than 10MB.");
       return;
     }
 
     try {
       setUploadingResume(true);
-      setError("");
+
       setMessage("");
 
       const formData = new FormData();
@@ -287,9 +301,13 @@ export default function ProfilePage() {
         }));
       }
 
-      setMessage("Resume uploaded successfully. Your profile and resume builder have been updated.");
+      setMessage(
+        "Resume uploaded successfully. Your profile and resume builder have been updated."
+      );
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Failed to process resume");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to process resume"
+      );
     } finally {
       setUploadingResume(false);
       event.target.value = "";
@@ -320,9 +338,13 @@ export default function ProfilePage() {
             {/* HEADER */}
 
             <div>
-              <p className="text-sm font-medium text-violet-600 dark:text-violet-400">Account</p>
+              <p className="text-sm font-medium text-violet-600 dark:text-violet-400">
+                Account
+              </p>
 
-              <h1 className="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">My Profile</h1>
+              <h1 className="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">
+                My Profile
+              </h1>
 
               <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-500">
                 Manage your personal and professional information.
@@ -337,12 +359,6 @@ export default function ProfilePage() {
               </div>
             )}
 
-            {error && (
-              <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600 dark:border-red-500/20 dark:bg-red-500/[0.05] dark:text-red-300">
-                {error}
-              </div>
-            )}
-
             <div className="mt-8 grid gap-6 lg:grid-cols-[300px_1fr]">
               {/* LEFT PROFILE */}
 
@@ -351,17 +367,32 @@ export default function ProfilePage() {
                   <div className="relative mx-auto w-fit">
                     <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 text-3xl font-bold text-white">
                       {profile.profileImage ? (
-                        <img src={profile.profileImage} alt={profile.name || "Profile"} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                        <img
+                          src={profile.profileImage}
+                          alt={profile.name || "Profile"}
+                          className="h-full w-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
                       ) : (
                         getInitials(profile.name)
                       )}
                     </div>
 
-                    <button type="button" onClick={() => fileInputRef.current?.click()} className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-600 hover:bg-violet-600 hover:text-white dark:border-white/10 dark:bg-[#181920] dark:text-zinc-300 dark:hover:bg-violet-600">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-600 hover:bg-violet-600 hover:text-white dark:border-white/10 dark:bg-[#181920] dark:text-zinc-300 dark:hover:bg-violet-600"
+                    >
                       <Camera size={14} />
                     </button>
 
-                    <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleProfileImageChange} />
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      onChange={handleProfileImageChange}
+                    />
                   </div>
 
                   <h2 className="mt-5 font-semibold text-zinc-900 dark:text-white">
@@ -385,11 +416,16 @@ export default function ProfilePage() {
                 <div className="mt-5 rounded-2xl border border-zinc-200 bg-white p-5 dark:border-white/[0.08] dark:bg-[#101117]">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100 dark:bg-violet-500/10">
-                      <FileText size={18} className="text-violet-600 dark:text-violet-400" />
+                      <FileText
+                        size={18}
+                        className="text-violet-600 dark:text-violet-400"
+                      />
                     </div>
 
                     <div className="flex-1">
-                      <p className="text-sm font-semibold text-zinc-900 dark:text-white">Import Resume</p>
+                      <p className="text-sm font-semibold text-zinc-900 dark:text-white">
+                        Import Resume
+                      </p>
 
                       <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-500">
                         Upload your resume to automatically fill your profile.
@@ -397,7 +433,12 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  <button type="button" onClick={() => resumeInputRef.current?.click()} disabled={uploadingResume} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-violet-500 disabled:opacity-50">
+                  <button
+                    type="button"
+                    onClick={() => resumeInputRef.current?.click()}
+                    disabled={uploadingResume}
+                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-violet-500 disabled:opacity-50"
+                  >
                     {uploadingResume ? (
                       <>
                         <Loader2 size={16} className="animate-spin" />
@@ -411,13 +452,21 @@ export default function ProfilePage() {
                     )}
                   </button>
 
-                  <input ref={resumeInputRef} type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={handleResumeUpload} />
+                  <input
+                    ref={resumeInputRef}
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    className="hidden"
+                    onChange={handleResumeUpload}
+                  />
                 </div>
 
                 {/* PROFILE COMPLETION */}
 
                 <div className="mt-5 rounded-2xl border border-zinc-200 bg-white p-5 dark:border-white/[0.08] dark:bg-[#101117]">
-                  <p className="text-sm font-semibold text-zinc-900 dark:text-white">Profile completion</p>
+                  <p className="text-sm font-semibold text-zinc-900 dark:text-white">
+                    Profile completion
+                  </p>
 
                   <div className="mt-4 flex items-center justify-between text-xs">
                     <span className="text-zinc-500">Progress</span>
@@ -428,7 +477,10 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="mt-2 h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-white/[0.06]">
-                    <div className="h-full rounded-full bg-violet-500 transition-all" style={{ width: `${calculateCompletion(profile)}%` }} />
+                    <div
+                      className="h-full rounded-full bg-violet-500 transition-all"
+                      style={{ width: `${calculateCompletion(profile)}%` }}
+                    />
                   </div>
                 </div>
               </div>
@@ -438,45 +490,116 @@ export default function ProfilePage() {
               <div className="space-y-6">
                 {/* BASIC INFORMATION */}
 
-                <Section title="Basic Information" description="Your account and contact information.">
+                <Section
+                  title="Basic Information"
+                  description="Your account and contact information."
+                >
                   <div className="grid gap-5 sm:grid-cols-2">
-                    <Input label="Full Name" icon={User} value={profile.name} disabled />
+                    <Input
+                      label="Full Name"
+                      icon={User}
+                      value={profile.name}
+                      disabled
+                    />
 
-                    <Input label="Email" icon={Mail} value={profile.email} disabled />
+                    <Input
+                      label="Email"
+                      icon={Mail}
+                      value={profile.email}
+                      disabled
+                    />
 
-                    <Input label="Phone" icon={Phone} value={profile.phone} onChange={(value) => handleChange("phone", value)} />
+                    <Input
+                      label="Phone"
+                      icon={Phone}
+                      value={profile.phone}
+                      onChange={(value) => handleChange("phone", value)}
+                    />
 
-                    <Input label="Location" icon={MapPin} value={profile.location} placeholder="Bhopal, India" onChange={(value) => handleChange("location", value)} />
+                    <Input
+                      label="Location"
+                      icon={MapPin}
+                      value={profile.location}
+                      placeholder="Bhopal, India"
+                      onChange={(value) => handleChange("location", value)}
+                    />
                   </div>
                 </Section>
 
                 {/* PROFESSIONAL */}
 
-                <Section title="Professional Information" description="Tell SkillPrep about your career.">
+                <Section
+                  title="Professional Information"
+                  description="Tell SkillPrep about your career."
+                >
                   <div className="grid gap-5 sm:grid-cols-2">
-                    <Input label="Current Role" value={profile.currentRole} placeholder="Full Stack Developer" onChange={(value) => handleChange("currentRole", value)} />
+                    <Input
+                      label="Current Role"
+                      value={profile.currentRole}
+                      placeholder="Full Stack Developer"
+                      onChange={(value) => handleChange("currentRole", value)}
+                    />
 
-                    <Input label="Experience" type="number" value={String(profile.experience)} placeholder="4.8" onChange={(value) => handleChange("experience", Number(value))} />
+                    <Input
+                      label="Experience"
+                      type="number"
+                      value={String(profile.experience)}
+                      placeholder="4.8"
+                      onChange={(value) =>
+                        handleChange("experience", Number(value))
+                      }
+                    />
 
                     <div className="sm:col-span-2">
-                      <Input label="Professional Headline" value={profile.headline} placeholder="MERN Stack Developer | Node.js | React | MongoDB" onChange={(value) => handleChange("headline", value)} />
+                      <Input
+                        label="Professional Headline"
+                        value={profile.headline}
+                        placeholder="MERN Stack Developer | Node.js | React | MongoDB"
+                        onChange={(value) => handleChange("headline", value)}
+                      />
                     </div>
 
                     <div className="sm:col-span-2">
-                      <label className="mb-2 block text-sm text-zinc-600 dark:text-zinc-400">Bio</label>
+                      <label className="mb-2 block text-sm text-zinc-600 dark:text-zinc-400">
+                        Bio
+                      </label>
 
-                      <textarea value={profile.bio} onChange={(e) => handleChange("bio", e.target.value)} rows={5} placeholder="Tell us about your experience and career goals..." className="w-full resize-none rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-violet-500/50 dark:border-white/[0.08] dark:bg-white/[0.02] dark:text-white dark:placeholder:text-zinc-600" />
+                      <textarea
+                        value={profile.bio}
+                        onChange={(e) => handleChange("bio", e.target.value)}
+                        rows={5}
+                        placeholder="Tell us about your experience and career goals..."
+                        className="w-full resize-none rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-violet-500/50 dark:border-white/[0.08] dark:bg-white/[0.02] dark:text-white dark:placeholder:text-zinc-600"
+                      />
                     </div>
                   </div>
                 </Section>
 
                 {/* SKILLS */}
 
-                <Section title="Skills" description="Add your technical skills.">
+                <Section
+                  title="Skills"
+                  description="Add your technical skills."
+                >
                   <div className="flex gap-2">
-                    <input value={skillInput} onChange={(e) => setSkillInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSkill(); } }} placeholder="Node.js" className="flex-1 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-violet-500/50 dark:border-white/[0.08] dark:bg-white/[0.02] dark:text-white dark:placeholder:text-zinc-600" />
+                    <input
+                      value={skillInput}
+                      onChange={(e) => setSkillInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          addSkill();
+                        }
+                      }}
+                      placeholder="Node.js"
+                      className="flex-1 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-violet-500/50 dark:border-white/[0.08] dark:bg-white/[0.02] dark:text-white dark:placeholder:text-zinc-600"
+                    />
 
-                    <button type="button" onClick={addSkill} className="flex items-center gap-2 rounded-xl bg-violet-600 px-4 text-sm font-medium text-white transition hover:bg-violet-500">
+                    <button
+                      type="button"
+                      onClick={addSkill}
+                      className="flex items-center gap-2 rounded-xl bg-violet-600 px-4 text-sm font-medium text-white transition hover:bg-violet-500"
+                    >
                       <Plus size={16} />
                       Add
                     </button>
@@ -484,10 +607,17 @@ export default function ProfilePage() {
 
                   <div className="mt-4 flex flex-wrap gap-2">
                     {profile.skills.map((skill) => (
-                      <div key={skill} className="flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-xs text-violet-700 dark:border-violet-500/20 dark:bg-violet-500/[0.07] dark:text-violet-200">
+                      <div
+                        key={skill}
+                        className="flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-xs text-violet-700 dark:border-violet-500/20 dark:bg-violet-500/[0.07] dark:text-violet-200"
+                      >
                         {skill}
 
-                        <button type="button" onClick={() => removeSkill(skill)} className="hover:text-violet-900 dark:hover:text-white">
+                        <button
+                          type="button"
+                          onClick={() => removeSkill(skill)}
+                          className="hover:text-violet-900 dark:hover:text-white"
+                        >
                           <X size={13} />
                         </button>
                       </div>
@@ -497,21 +627,50 @@ export default function ProfilePage() {
 
                 {/* LINKS */}
 
-                <Section title="Professional Links" description="Add your developer profiles.">
+                <Section
+                  title="Professional Links"
+                  description="Add your developer profiles."
+                >
                   <div className="space-y-4">
-                    <Input label="GitHub" icon={GitBranch} value={profile.github} placeholder="https://github.com/username" onChange={(value) => handleChange("github", value)} />
+                    <Input
+                      label="GitHub"
+                      icon={GitBranch}
+                      value={profile.github}
+                      placeholder="https://github.com/username"
+                      onChange={(value) => handleChange("github", value)}
+                    />
 
-                    <Input label="LinkedIn" value={profile.linkedin} placeholder="https://linkedin.com/in/username" onChange={(value) => handleChange("linkedin", value)} />
+                    <Input
+                      label="LinkedIn"
+                      value={profile.linkedin}
+                      placeholder="https://linkedin.com/in/username"
+                      onChange={(value) => handleChange("linkedin", value)}
+                    />
 
-                    <Input label="Portfolio" icon={Globe} value={profile.portfolio} placeholder="https://yourportfolio.com" onChange={(value) => handleChange("portfolio", value)} />
+                    <Input
+                      label="Portfolio"
+                      icon={Globe}
+                      value={profile.portfolio}
+                      placeholder="https://yourportfolio.com"
+                      onChange={(value) => handleChange("portfolio", value)}
+                    />
                   </div>
                 </Section>
 
                 {/* SAVE */}
 
                 <div className="flex justify-end">
-                  <button type="button" onClick={handleSave} disabled={saving} className="flex items-center gap-2 rounded-xl bg-violet-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-violet-500 disabled:opacity-50">
-                    {saving ? <Loader2 size={17} className="animate-spin" /> : <Save size={17} />}
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="flex items-center gap-2 rounded-xl bg-violet-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-violet-500 disabled:opacity-50"
+                  >
+                    {saving ? (
+                      <Loader2 size={17} className="animate-spin" />
+                    ) : (
+                      <Save size={17} />
+                    )}
                     {saving ? "Saving..." : "Save Profile"}
                   </button>
                 </div>
@@ -567,12 +726,28 @@ function Input({
 }) {
   return (
     <div>
-      <label className="mb-2 block text-sm text-zinc-600 dark:text-zinc-400">{label}</label>
+      <label className="mb-2 block text-sm text-zinc-600 dark:text-zinc-400">
+        {label}
+      </label>
 
       <div className="relative">
-        {Icon && <Icon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-600" />}
+        {Icon && (
+          <Icon
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-600"
+          />
+        )}
 
-        <input type={type} value={value} disabled={disabled} placeholder={placeholder} onChange={(e) => onChange?.(e.target.value)} className={`w-full rounded-xl border border-zinc-200 bg-zinc-50 py-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-violet-500/50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[0.08] dark:bg-white/[0.02] dark:text-white dark:placeholder:text-zinc-600 ${Icon ? "pl-10 pr-4" : "px-4"}`} />
+        <input
+          type={type}
+          value={value}
+          disabled={disabled}
+          placeholder={placeholder}
+          onChange={(e) => onChange?.(e.target.value)}
+          className={`w-full rounded-xl border border-zinc-200 bg-zinc-50 py-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-violet-500/50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[0.08] dark:bg-white/[0.02] dark:text-white dark:placeholder:text-zinc-600 ${
+            Icon ? "pl-10 pr-4" : "px-4"
+          }`}
+        />
       </div>
     </div>
   );

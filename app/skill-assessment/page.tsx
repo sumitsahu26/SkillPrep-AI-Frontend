@@ -36,6 +36,8 @@ import {
   type AssessmentDifficulty,
   type SkillAssessment,
 } from "@/services/skillAssessmentApi";
+import { toast } from "sonner";
+
 
 type PageMode = "setup" | "assessment" | "result";
 
@@ -56,18 +58,14 @@ const fallbackTechnologies = [
 
 const questionCounts = [1, 5, 10, 15, 20];
 
-/* =========================================================
-   PAGE
-========================================================= */
+  //  PAGE
 
 export default function SkillAssessmentPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [mode, setMode] = useState<PageMode>("setup");
 
-  /* =====================================================
-     CONFIG
-  ===================================================== */
+    //  CONFIG
 
   const [technology, setTechnology] = useState("Node.js");
 
@@ -81,9 +79,7 @@ export default function SkillAssessmentPage() {
 
   const [questionCount, setQuestionCount] = useState(10);
 
-  /* =====================================================
-     ASSESSMENT
-  ===================================================== */
+    //  ASSESSMENT
 
   const [assessment, setAssessment] = useState<SkillAssessment | null>(null);
 
@@ -91,15 +87,11 @@ export default function SkillAssessmentPage() {
 
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
-  /* =====================================================
-     HISTORY
-  ===================================================== */
+    //  HISTORY
 
   const [history, setHistory] = useState<SkillAssessment[]>([]);
 
-  /* =====================================================
-     LOADING
-  ===================================================== */
+    //  LOADING
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -108,8 +100,6 @@ export default function SkillAssessmentPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  const [error, setError] = useState("");
 
   const [message, setMessage] = useState("");
 
@@ -152,9 +142,7 @@ export default function SkillAssessmentPage() {
     loadTopics();
   }, [technology]);
 
-  /* =====================================================
-     LOAD HISTORY
-  ===================================================== */
+    //  LOAD HISTORY
 
   const loadHistory = async () => {
     try {
@@ -166,7 +154,7 @@ export default function SkillAssessmentPage() {
     } catch (err) {
       console.error("Assessment history:", err);
 
-      setError(err instanceof Error ? err.message : "Failed to load assessments");
+      toast.error(err instanceof Error ? err.message : "Failed to load assessments");
     } finally {
       setIsLoading(false);
     }
@@ -176,9 +164,7 @@ export default function SkillAssessmentPage() {
     loadHistory();
   }, []);
 
-  /* =====================================================
-     CURRENT QUESTION
-  ===================================================== */
+    //  CURRENT QUESTION
 
   const currentQuestion = assessment?.questions[currentIndex];
 
@@ -186,13 +172,11 @@ export default function SkillAssessmentPage() {
 
   const progress = assessment ? Math.round(((currentIndex + 1) / assessment.questions.length) * 100) : 0;
 
-  /* =====================================================
-     START
-  ===================================================== */
+    //  START
 
   const handleStart = async () => {
     try {
-      setError("");
+      
       setMessage("");
 
       setIsStarting(true);
@@ -234,15 +218,13 @@ export default function SkillAssessmentPage() {
 
       await loadHistory();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to start assessment");
+      toast.error(err instanceof Error ? err.message : "Failed to start assessment");
     } finally {
       setIsStarting(false);
     }
   };
 
-  /* =====================================================
-     SELECT ANSWER
-  ===================================================== */
+    //  SELECT ANSWER
 
   const handleSelectAnswer = (questionId: string, option: string) => {
     setAnswers((previous) => ({
@@ -251,9 +233,7 @@ export default function SkillAssessmentPage() {
     }));
   };
 
-  /* =====================================================
-     NEXT
-  ===================================================== */
+    //  NEXT
 
   const handleNext = () => {
     if (!assessment) {
@@ -265,9 +245,7 @@ export default function SkillAssessmentPage() {
     }
   };
 
-  /* =====================================================
-     PREVIOUS
-  ===================================================== */
+    //  PREVIOUS
 
   const handlePrevious = () => {
     if (currentIndex > 0) {
@@ -275,9 +253,7 @@ export default function SkillAssessmentPage() {
     }
   };
 
-  /* =====================================================
-     SUBMIT
-  ===================================================== */
+    //  SUBMIT
 
   const handleSubmit = async () => {
     if (!assessment) {
@@ -285,7 +261,7 @@ export default function SkillAssessmentPage() {
     }
 
     if (answeredCount === 0) {
-      setError("Please answer at least one question.");
+      toast.error("Please answer at least one question.");
 
       return;
     }
@@ -293,7 +269,7 @@ export default function SkillAssessmentPage() {
     try {
       setIsSubmitting(true);
 
-      setError("");
+      
 
       const answerList = assessment.questions.map((question) => ({
         questionId: question._id,
@@ -308,19 +284,17 @@ export default function SkillAssessmentPage() {
 
       await loadHistory();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to submit assessment");
+      toast.error(err instanceof Error ? err.message : "Failed to submit assessment");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  /* =====================================================
-     OPEN HISTORY
-  ===================================================== */
+    //  OPEN HISTORY
 
   const handleOpenAssessment = async (id: string) => {
     try {
-      setError("");
+      
 
       const response = await getSkillAssessment(id);
 
@@ -346,13 +320,11 @@ export default function SkillAssessmentPage() {
         setMode("assessment");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to open assessment");
+      toast.error(err instanceof Error ? err.message : "Failed to open assessment");
     }
   };
 
-  /* =====================================================
-     DELETE
-  ===================================================== */
+    //  DELETE
 
   const handleDelete = async (id: string) => {
     try {
@@ -366,15 +338,13 @@ export default function SkillAssessmentPage() {
         handleNewAssessment();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete assessment");
+      toast.error(err instanceof Error ? err.message : "Failed to delete assessment");
     } finally {
       setDeletingId(null);
     }
   };
 
-  /* =====================================================
-     NEW ASSESSMENT
-  ===================================================== */
+    //  NEW ASSESSMENT
 
   const handleNewAssessment = () => {
     setAssessment(null);
@@ -383,16 +353,14 @@ export default function SkillAssessmentPage() {
 
     setCurrentIndex(0);
 
-    setError("");
+    
 
     setMessage("");
 
     setMode("setup");
   };
 
-  /* =====================================================
-     HISTORY STATS
-  ===================================================== */
+    //  HISTORY STATS
 
   const completedHistory = useMemo(() => history.filter((item) => item.status === "completed"), [history]);
 
@@ -406,9 +374,7 @@ export default function SkillAssessmentPage() {
     return Math.round(total / completedHistory.length);
   }, [completedHistory]);
 
-  /* =====================================================
-     UI
-  ===================================================== */
+    //  UI
 
   return (
     <AuthGuard>
@@ -441,13 +407,6 @@ export default function SkillAssessmentPage() {
                 </button>
               )}
             </div>
-
-            {error && (
-              <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600 dark:border-red-500/20 dark:bg-red-500/[0.06] dark:text-red-300">
-                <CircleAlert size={17} className="mt-0.5 shrink-0" />
-                {error}
-              </div>
-            )}
 
             {message && (
               <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-600 dark:border-emerald-500/20 dark:bg-emerald-500/[0.06] dark:text-emerald-300">
@@ -905,9 +864,7 @@ export default function SkillAssessmentPage() {
   );
 }
 
-/* =========================================================
-   SELECT FIELD
-========================================================= */
+  //  SELECT FIELD
 
 function SelectField({
   label,
@@ -935,9 +892,7 @@ function SelectField({
   );
 }
 
-/* =========================================================
-   INFO
-========================================================= */
+  //  INFO
 
 function InfoItem({
   number,
@@ -961,9 +916,7 @@ function InfoItem({
   );
 }
 
-/* =========================================================
-   STAT
-========================================================= */
+  //  STAT
 
 function StatCard({
   title,
